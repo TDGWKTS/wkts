@@ -1700,6 +1700,347 @@
     }
 });
 </script>
+
+<script>
+// ========== R2 SYNC FUNCTIONALITY ==========
+// FOR WKTS STATION - Change this URL for other stations
+const CLOUD_FUNCTION_URL = 'https://inspection-sync.tdgwkts.workers.dev/api/sync/wkts';
+const STATION_ID = 'wkts';
+
+// IndexedDB for tracking sync status
+let syncDB;
+
+function initSyncDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(`${STATION_ID}_SyncDB`, 1);
+        
+        request.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains('inspections')) {
+                const store = db.createObjectStore('inspections', { keyPath: 'id' });
+                store.createIndex('syncStatus', 'syncStatus', { unique: false });
+                store.createIndex('timestamp', 'timestamp', { unique: false });
+            }
+        };
+        
+        request.onsuccess = (e) => {
+            syncDB = e.target.result;
+            resolve(syncDB);
+        };
+        
+        request.onerror = (e) => reject(e.target.error);
+    });
+}
+
+function generateSessionId() {
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0];
+    const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '');
+    return `${STATION_ID}_${dateStr}_${timeStr}_${Math.random().toString(36).substr(2, 8)}`;
+}
+
+function collectFormDataForSync() {
+    const form = document.getElementById('inspectionForm');
+    const formData = new FormData(form);
+    const data = {};
+    
+    for (let [key, value] of formData.entries()) {
+        data[key] = value;
+    }
+    
+    // Handle checkboxes
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        data[cb.name] = cb.checked ? 'true' : 'false';
+    });
+    
+    // Add metadata
+    data.stationId = STATION_ID;
+    data.submittedAt = new Date().toISOString();
+    
+    const dateInput = document.querySelector('input[name="txtDate"]');
+    if (dateInput) data.date = dateInput.value;
+    
+    return data;
+}
+
+function saveToSyncDB(data) {
+    return new Promise((resolve, reject) => {
+        if (!syncDB) {
+            reject(new Error('Database not initialized'));
+            return;
+        }
+        
+        const record = {
+            id: generateSessionId(),
+            data: data,
+            timestamp: new Date().toISOString(),
+            syncStatus: 'pending',
+            retryCount: 0
+        };
+        
+        const tx = syncDB.transaction('inspections', 'readwrite');
+        const store = tx.objectStore('inspections');
+        const request = store.add(record);
+        
+        request.onsuccess = () => resolve(record.id);
+        request.onerror = (e) => reject(e.target.error);
+    });
+}
+
+function updateSyncStatus(id, status) {
+    return new Promise((resolve, reject) => {
+        const tx = syncDB.transaction('inspections', 'readwrite');
+        const store = tx.objectStore('inspections');
+        const getRequest = store.get(id);
+        
+        getRequest.onsuccess = () => {
+            const record = getRequest.result;
+            if (record) {
+                record.syncStatus = status;
+                record.lastSyncAttempt = new Date().toISOString();
+                store.put(record);
+                resolve();
+            } else {
+                reject(new Error('Record not found'));
+            }
+        };
+        getRequest.onerror = (e) => reject(e.target.error);
+    });
+}
+
+async function syncToCloud(record) {
+    try {
+        const response = await fetch(CLOUD_FUNCTION_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                stationId: STATION_ID,
+                inspectionId: record.id,
+                data: record.data,
+                timestamp: record.timestamp
+            })
+        });
+        
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        
+        const result = await response.json();
+        console.log('✅ Synced to:', result.key, 'Month:', result.yearMonth);
+        
+        await updateSyncStatus(record.id, 'synced');
+        return { success: true };
+        
+    } catch (error) {
+        console.error('❌ Sync failed:', error);
+        await updateSyncStatus(record.id, 'error');
+        return { success: false, error: error.message };
+    }
+}
+
+async function getPendingRecords() {
+    return new Promise((resolve, reject) => {
+        const tx = syncDB.transaction('inspections', 'readonly');
+        const store = tx.objectStore('inspections');
+        const index = store.index('syncStatus');
+        const request = index.getAll('pending');
+        
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = (e) => reject(e.target.error);
+    });
+}
+
+async function getSyncedRecords() {
+    return new Promise((resolve, reject) => {
+        const tx = syncDB.transaction('inspections', 'readonly');
+        const store = tx.objectStore('inspections');
+        const index = store.index('syncStatus');
+        const request = index.getAll('synced');
+        
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = (e) => reject(e.target.error);
+    });
+}
+
+async function getAllRecords() {
+    return new Promise((resolve, reject) => {
+        const tx = syncDB.transaction('inspections', 'readonly');
+        const store = tx.objectStore('inspections');
+        const request = store.getAll();
+        
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = (e) => reject(e.target.error);
+    });
+}
+
+async function deleteRecord(id) {
+    return new Promise((resolve, reject) => {
+        const tx = syncDB.transaction('inspections', 'readwrite');
+        const store = tx.objectStore('inspections');
+        const request = store.delete(id);
+        
+        request.onsuccess = () => resolve();
+        request.onerror = (e) => reject(e.target.error);
+    });
+}
+
+async function clearSyncedRecords() {
+    const syncedRecords = await getSyncedRecords();
+    for (const record of syncedRecords) {
+        await deleteRecord(record.id);
+    }
+    console.log(`🧹 Cleared ${syncedRecords.length} synced records from local DB`);
+    return syncedRecords.length;
+}
+
+async function syncAllPending() {
+    const pendingRecords = await getPendingRecords();
+    
+    if (pendingRecords.length === 0) {
+        showStatus('✓ All records synced', 'success');
+        return { synced: 0, failed: 0 };
+    }
+    
+    showStatus(`⏳ Syncing ${pendingRecords.length} record(s)...`, 'info');
+    
+    let synced = 0;
+    let failed = 0;
+    
+    for (const record of pendingRecords) {
+        const result = await syncToCloud(record);
+        if (result.success) {
+            synced++;
+        } else {
+            failed++;
+        }
+        showStatus(`⏳ Synced ${synced + failed}/${pendingRecords.length}...`, 'info');
+    }
+    
+    if (synced > 0) {
+        // Clean up synced records from local DB
+        await clearSyncedRecords();
+    }
+    
+    showStatus(`✅ Sync complete: ${synced} synced, ${failed} failed`, synced > 0 ? 'success' : 'error');
+    return { synced, failed };
+}
+
+function showStatus(msg, type) {
+    const statusDiv = document.getElementById('status');
+    if (statusDiv) {
+        statusDiv.textContent = msg;
+        statusDiv.style.color = type === 'error' ? '#e74c3c' : (type === 'success' ? '#27ae60' : '#f39c12');
+        setTimeout(() => {
+            if (statusDiv.textContent === msg) {
+                statusDiv.textContent = '';
+            }
+        }, 5000);
+    } else {
+        console.log(`[${type}] ${msg}`);
+    }
+}
+
+// Auto-sync when back online
+function setupOnlineSync() {
+    window.addEventListener('online', async () => {
+        showStatus('🔄 Connection restored. Syncing...', 'info');
+        await syncAllPending();
+    });
+}
+
+// Retry failed syncs every 5 minutes if offline
+let retryInterval;
+function setupRetrySync() {
+    retryInterval = setInterval(async () => {
+        const pending = await getPendingRecords();
+        if (pending.length > 0 && navigator.onLine) {
+            console.log(`🔄 Retry sync for ${pending.length} pending records`);
+            await syncAllPending();
+        }
+    }, 300000); // 5 minutes
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', async () => {
+    await initSyncDB();
+    setupOnlineSync();
+    setupRetrySync();
+    
+    // Check pending on page load
+    const pending = await getPendingRecords();
+    if (pending.length > 0) {
+        showStatus(`📁 ${pending.length} record(s) pending sync`, 'info');
+        if (navigator.onLine) {
+            await syncAllPending();
+        }
+    }
+});
+
+// Hook into your existing export button
+const originalExportBtn = document.getElementById('exportExcelBtn');
+if (originalExportBtn) {
+    // Replace with enhanced version
+    const newExportBtn = originalExportBtn.cloneNode(true);
+    originalExportBtn.parentNode.replaceChild(newExportBtn, originalExportBtn);
+    
+    newExportBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        
+        // Show loading indicator
+        const originalText = newExportBtn.textContent;
+        newExportBtn.textContent = '⏳ Saving & Syncing...';
+        newExportBtn.disabled = true;
+        
+        try {
+            // Collect and save to local DB
+            const data = collectFormDataForSync();
+            const recordId = await saveToSyncDB(data);
+            showStatus('📁 Data saved locally', 'success');
+            
+            // Try to sync immediately
+            await syncAllPending();
+            
+        } catch (error) {
+            showStatus('⚠️ Save failed: ' + error.message, 'error');
+        } finally {
+            newExportBtn.textContent = originalText;
+            newExportBtn.disabled = false;
+        }
+        
+        // Call your existing Excel export function
+        if (typeof exportToExcel === 'function') {
+            exportToExcel();
+        } else {
+            // Try to trigger the original export button's click handler
+            const tempEvent = new Event('click');
+            newExportBtn.dispatchEvent(tempEvent);
+        }
+    });
+}
+
+// Manual sync button (add to your HTML if you want: <button id="manualSyncBtn">📡 Sync Now</button>)
+const manualSyncBtn = document.getElementById('manualSyncBtn');
+if (manualSyncBtn) {
+    manualSyncBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        manualSyncBtn.disabled = true;
+        manualSyncBtn.textContent = '⏳ Syncing...';
+        await syncAllPending();
+        manualSyncBtn.disabled = false;
+        manualSyncBtn.textContent = '📡 Sync Now';
+    });
+}
+
+// Clear local storage button (optional: <button id="clearStorageBtn">🗑️ Clear Local Data</button>)
+const clearStorageBtn = document.getElementById('clearStorageBtn');
+if (clearStorageBtn) {
+    clearStorageBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        if (confirm('Clear all synced records from local storage? This does NOT delete cloud data.')) {
+            const count = await clearSyncedRecords();
+            showStatus(`🗑️ Cleared ${count} synced records from local storage`, 'success');
+        }
+    });
+}
+</script>
 </body>
 </html>
 
