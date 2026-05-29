@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Daily Inspection Form - With R2 Sync & Excel Export</title>
+  <title>Daily Inspection Form - R2 Sync Matches Excel Format</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body {
@@ -1308,6 +1308,93 @@
     const STATION_ID = 'wkts';
     let syncDB;
 
+    // ========== EXCEL HEADERS & FIELD MAPPING (150+ fields) ==========
+    const EXCEL_HEADERS = [
+      "Date", "Inspector", "Time", "Weather", "Weightbridge 1", "Weightbridge 2",
+      "Weightbridge 3", "Weightbridge 4", "CCTV", "Weight Display", "Vehicle No. (Bridge)",
+      "Type/Origin", "Permited Waste", "Off-site Queue", "Inspected by EPD", "Inspected by CHEC",
+      "Vehicle No. (Tipping)", "Type (Tipping)", "Permited Waste (Tipping)", "Traffic Control",
+      "CCTV (Tipping)", "Filter Press", "C1", "Container No. (C1)", "C2", "Container No. (C2)",
+      "MF1", "C3", "Container No. (C3)", "MF2", "C4", "Container No. (C4)", "MF3", "C5",
+      "Container No. (C5)", "MF4", "C6", "Container No. (C6)", "MF5", "C7", "Container No. (C7)",
+      "MF6", "C8", "Container No. (C8)", "C9", "Container No. (C9)", "C10", "Container No. (C10)",
+      "Screen 1", "Screen 2", "Screen 3", "Tank 1A", "Tank 1B", "Tank 2A", "Tank 2B", "DAF 1",
+      "DAF 2", "GTW Area", "Crane 1", "Crane 2", "CHU 1", "CHU 2", "145B", "550FV", "155WV",
+      "Others", "Lai Wan", "Ngon Shuen", "Vehicle Wash 1", "Vehicle Wash 2", "Vehicle Wash 3",
+      "Cleanliness", ">30 mins", "Offsite >24 hrs", "Air Curtain", "Scrubber 1", "Scrubber 2",
+      "Scrubber 3", "Scrubber 4", "Scrubber 5", "Acid Stage 1", "Acid Stage 2", "Acid Stage 4",
+      "Acid Stage 5", "Alk Stage 1", "Alk Stage 2", "Alk Stage 3", "Alk Stage 4", "Alk Stage 5",
+      "ORP Range 1", "ORP Range 2", "ORP Range 3", "ORP Range 4", "ORP Range 5", "Before Treatment",
+      "Anaerobic Tanks", "T300", "T401", "T402", "T403", "T404", "Final Clarifier", "Filter Press",
+      "Biogas Tank", "Penstock", "Remarks 1", "Remarks 2", "Remarks 3", "Remarks 4", "PLC Condition",
+      "Pre Treatment", "Penstock Status", "AerobicS", "AT401", "AT402", "AT403", "AT404",
+      "AnaerobicS", "ApH", "ATemp", "ADO", "ABiogas", "Post-Treatment", "Centrifuge", "Wetsep",
+      "Marine Vessel", "Storm", "VWF", "Rundown", "101", "100", "313", "312", "410", "413",
+      "Public", "Road", "Marine", "Scrubbers", "VWS", "401 DO", "402 DO", "403 DO", "404 DO",
+      "401 Temp", "402 Temp", "403 Temp", "404 Temp", "404 pH", "Number of Containers Completed", 
+      "Wheelstopper Conditions", "Wheelstopper Conditions (Remarks)", "DG Storage", "C6A", "Container No. (C6A)", "Timestamp"
+    ];
+
+    const FIELD_NAMES = [
+      "txtDate", "cmbInspector", "txtTime", "cmbWeather", "chkWeightbridge1", "chkWeightbridge2",
+      "chkWeightbridge3", "chkWeightbridge4", "cmbCCTV", "cmbWeightDis", "bridgeWasteV",
+      "bridgeWasteT", "cmbPermitedW", "cmboffQ", "chktipping1", "chktipping2", "tippingWasteV",
+      "tippingWasteT", "cmbtippingPermitedW", "cmbtippingTraffic", "cmbtippingCCTV", "txtfPress",
+      "chkC1", "txtC1", "chkC2", "txtC2", "chkMF1", "chkC3", "txtC3", "chkMF2", "chkC4",
+      "txtC4", "chkMF3", "chkC5", "txtC5", "chkMF4", "chkC6", "txtC6", "chkMF5", "chkC7",
+      "txtC7", "chkMF6", "chkC8", "txtC8", "chkC9", "txtC9", "chkC10", "txtC10", "chkScreen1",
+      "chkScreen2", "chkScreen3", "txt1A", "txt1B", "txt2A", "txt2B", "chkDAF1", "chkDAF2",
+      "cmbGTW", "chkCrane1", "chkCrane2", "chkCHU1", "chkCHU2", "txt145B", "txt550FV",
+      "txt155W", "txtOthers", "chkLaiwan", "chkNgonshuen", "chkWash1", "chkWash2", "chkWash3",
+      "cmbCleanliness", "cmbMinutes", "cmbHours", "cmbCurtain", "chkScrubber1", "chkScrubber2",
+      "chkScrubber3", "chkScrubber4", "chkScrubber5", "txtAcid1", "txtAcid2", "txtAcid4",
+      "txtAcid5", "txtAlk1", "txtAlk2", "txtAlk3", "txtAlk4", "txtAlk5", "txtORP1", "txtORP2",
+      "txtORP3", "txtORP4", "txtORP5", "cmbBefore", "cmbAnaerobic", "chkT300", "chkT401",
+      "chkT402", "chkT403", "chkT404", "cmbFinal", "cmbFilter", "cmbBiogas", "cmbPenstock",
+      "txtRemarks1", "txtRemarks2", "txtRemarks3", "txtRemarks4", "cmbPLC", "cmbPreT",
+      "cmbPenstockChamber", "cmbAerobicS", "txtAT401", "txtAT402", "txtAT403", "txtAT404",
+      "cmbAnaerobicS", "txtApH", "txtATemp", "txtADO", "txtABiogas", "cmbPostT", "cmbCent",
+      "txtWetsep", "txtMarineVessel", "txtStorm", "txtVWF", "txtRundown", "txt101", "txt100",
+      "txt313", "txt312", "txt410", "txt413", "txtPublic", "txtRoad", "txtMarine", "txtScrubbers",
+      "txtVWS", "txt401DO", "txt402DO", "txt403DO", "txt404DO", "txt401Temp", "txt402Temp",
+      "txt403Temp", "txt404Temp", "txt404pH", "txtContainers", "chkWheelstoppers", "txtWheelstoppers",
+      "cmbDG", "chkC6A", "txtC6A", "timestamp"
+    ];
+
+    // Function to convert raw form data to Excel row format (flattened)
+    const convertToExcelRow = (rawData) => {
+      const uppercaseFields = [
+        'bridgeWasteV', 'bridgeWasteT', 'tippingWasteV', 'tippingWasteT', 'txtC1', 'txtC2', 'txtC3', 'txtC4',
+        'txtC5', 'txtC6', 'txtC7', 'txtC8', 'txtC9', 'txtC10', 'txtC6A'
+      ];
+      
+      // Create a copy with uppercase applied
+      const processedData = { ...rawData };
+      uppercaseFields.forEach(field => {
+        if (processedData[field] && typeof processedData[field] === 'string') {
+          processedData[field] = processedData[field].toUpperCase();
+        }
+      });
+      
+      // Build the flattened row
+      const row = {};
+      FIELD_NAMES.forEach((fieldName, index) => {
+        let value = processedData[fieldName] || '';
+        
+        // Special formatting for date
+        if (fieldName === "txtDate" && value) {
+          if (value.includes('-')) {
+            const [year, month, day] = value.split('-');
+            value = `${day}/${month}/${year}`;
+          }
+        }
+        
+        row[EXCEL_HEADERS[index]] = value;
+      });
+      
+      return row;
+    };
+
     // Initialize IndexedDB for main storage
     const initDB = () => {
       return new Promise((resolve, reject) => {
@@ -1324,17 +1411,17 @@
           resolve(db);
         };
         request.onerror = (e) => reject(e.target.error);
-        request.onblocked = () => reject(new Error('Database blocked'));
       });
     };
 
     // Initialize Sync DB
     const initSyncDB = () => {
       return new Promise((resolve, reject) => {
-        const request = indexedDB.open(`${STATION_ID}_SyncDB`, 1);
+        const request = indexedDB.open(`${STATION_ID}_SyncDB`, 2);
         request.onupgradeneeded = (e) => {
           const db = e.target.result;
           if (!db.objectStoreNames.contains('inspections')) {
+            // Store records in Excel row format
             db.createObjectStore('inspections', { keyPath: 'id' });
           }
         };
@@ -1354,31 +1441,61 @@
       return `${STATION_ID}_${dateStr}_${timeStr}_${Math.random().toString(36).substr(2, 8)}`;
     };
 
-    // Collect current form data for sync
-    const collectFormDataForSync = () => {
+    // Collect current form data and convert to Excel row format for R2
+    const collectFormDataForR2 = () => {
       const form = document.getElementById('inspectionForm');
       const formData = new FormData(form);
-      const data = {};
+      const rawData = {};
+      
       for (let [key, value] of formData.entries()) {
-        data[key] = value;
+        rawData[key] = value;
       }
+      
       document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-        data[cb.name] = cb.checked ? 'true' : 'false';
+        rawData[cb.name] = cb.checked ? 'true' : 'false';
       });
-      data.stationId = STATION_ID;
-      data.submittedAt = new Date().toISOString();
+      
+      // Add metadata
+      rawData.timestamp = new Date().toISOString();
+      rawData.stationId = STATION_ID;
+      
       const dateInput = document.querySelector('input[name="txtDate"]');
-      if (dateInput) data.date = dateInput.value;
-      return data;
+      if (dateInput) rawData.txtDate = dateInput.value;
+      
+      // Convert to Excel row format (flattened with headers as keys)
+      return convertToExcelRow(rawData);
     };
 
-    // Save to Sync DB
-    const saveToSyncDB = (data) => {
+    // Collect current form data as raw for main DB backup
+    const collectRawFormData = () => {
+      const form = document.getElementById('inspectionForm');
+      const formData = new FormData(form);
+      const rawData = {};
+      
+      for (let [key, value] of formData.entries()) {
+        rawData[key] = value;
+      }
+      
+      document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        rawData[cb.name] = cb.checked ? 'true' : 'false';
+      });
+      
+      rawData.timestamp = new Date().toISOString();
+      rawData.stationId = STATION_ID;
+      
+      const dateInput = document.querySelector('input[name="txtDate"]');
+      if (dateInput) rawData.txtDate = dateInput.value;
+      
+      return rawData;
+    };
+
+    // Save to Sync DB (stores in Excel row format)
+    const saveToSyncDB = (excelRowData) => {
       return new Promise((resolve, reject) => {
         if (!syncDB) reject(new Error('Database not initialized'));
         const record = {
           id: generateSessionId(),
-          data: data,
+          data: excelRowData,  // Now stored in Excel row format (headers as keys)
           timestamp: new Date().toISOString(),
           syncStatus: 'pending'
         };
@@ -1389,7 +1506,7 @@
       });
     };
 
-    // Sync to Cloudflare R2
+    // Sync to Cloudflare R2 (sends Excel row format)
     const syncToCloud = async (record) => {
       try {
         const response = await fetch(CLOUD_FUNCTION_URL, {
@@ -1398,7 +1515,7 @@
           body: JSON.stringify({
             stationId: STATION_ID,
             inspectionId: record.id,
-            data: record.data,
+            data: record.data,  // This is already in Excel row format
             timestamp: record.timestamp
           })
         });
@@ -1435,7 +1552,7 @@
         return { synced: 0, failed: 0 };
       }
       
-      updateStatusMessage(`📁 Syncing ${records.length} record(s)...`, 'info');
+      updateStatusMessage(`📁 Syncing ${records.length} record(s) to R2...`, 'info');
       
       let synced = 0;
       let failed = 0;
@@ -1451,6 +1568,7 @@
           deleteTx.objectStore('inspections').delete(record.id);
         } else {
           failed++;
+          console.error(`Failed to sync ${record.id}:`, result.error);
         }
       }
       
@@ -1587,7 +1705,7 @@
       setTimeout(() => status.textContent = '', 5000);
     };
 
-    // Save to main IndexedDB
+    // Save to main IndexedDB (stores raw data)
     const saveToMainDB = (data) => {
       return new Promise((resolve, reject) => {
         if (!dbInitialized || !db) reject(new Error('Database not initialized'));
@@ -1598,13 +1716,18 @@
       });
     };
 
-    // Get all records from main DB
-    const getAllMainRecords = () => {
+    // Get all records from main DB and convert to Excel format
+    const getAllRecordsForExcel = () => {
       return new Promise((resolve, reject) => {
         if (!dbInitialized || !db) reject(new Error('Database not initialized'));
         const tx = db.transaction('inspections', 'readonly');
         const store = tx.objectStore('inspections');
-        store.getAll().onsuccess = (e) => resolve(e.target.result);
+        store.getAll().onsuccess = (e) => {
+          const rawRecords = e.target.result || [];
+          // Convert each raw record to Excel row format
+          const excelRows = rawRecords.map(record => convertToExcelRow(record));
+          resolve(excelRows);
+        };
         store.onerror = (e) => reject(e.target.error);
       });
     };
@@ -1678,96 +1801,7 @@
       }
     };
 
-    // Build Excel data
-    const buildExcelData = (data) => {
-      const uppercaseFields = [
-        'bridgeWasteV', 'bridgeWasteT', 'tippingWasteV', 'tippingWasteT', 'txtC1', 'txtC2', 'txtC3', 'txtC4',
-        'txtC5', 'txtC6', 'txtC7', 'txtC8', 'txtC9', 'txtC10'
-      ];
-
-      const uppercaseData = data.map(item => {
-        const newItem = { ...item };
-        uppercaseFields.forEach(field => {
-          if (newItem[field] && typeof newItem[field] === 'string') {
-            newItem[field] = newItem[field].toUpperCase();
-          }
-        });
-        return newItem;
-      });
-
-      const reformatDate = (dateStr) => {
-        if (!dateStr) return '';
-        if (dateStr.includes('-')) {
-          const [year, month, day] = dateStr.split('-');
-          return `${day}/${month}/${year}`;
-        }
-        return dateStr;
-      };
-
-      const headers = [
-        "Date", "Inspector", "Time", "Weather", "Weightbridge 1", "Weightbridge 2",
-        "Weightbridge 3", "Weightbridge 4", "CCTV", "Weight Display", "Vehicle No. (Bridge)",
-        "Type/Origin", "Permited Waste", "Off-site Queue", "Inspected by EPD", "Inspected by CHEC",
-        "Vehicle No. (Tipping)", "Type (Tipping)", "Permited Waste (Tipping)", "Traffic Control",
-        "CCTV (Tipping)", "Filter Press", "C1", "Container No. (C1)", "C2", "Container No. (C2)",
-        "MF1", "C3", "Container No. (C3)", "MF2", "C4", "Container No. (C4)", "MF3", "C5",
-        "Container No. (C5)", "MF4", "C6", "Container No. (C6)", "MF5", "C7", "Container No. (C7)",
-        "MF6", "C8", "Container No. (C8)", "C9", "Container No. (C9)", "C10", "Container No. (C10)",
-        "Screen 1", "Screen 2", "Screen 3", "Tank 1A", "Tank 1B", "Tank 2A", "Tank 2B", "DAF 1",
-        "DAF 2", "GTW Area", "Crane 1", "Crane 2", "CHU 1", "CHU 2", "145B", "550FV", "155WV",
-        "Others", "Lai Wan", "Ngon Shuen", "Vehicle Wash 1", "Vehicle Wash 2", "Vehicle Wash 3",
-        "Cleanliness", ">30 mins", "Offsite >24 hrs", "Air Curtain", "Scrubber 1", "Scrubber 2",
-        "Scrubber 3", "Scrubber 4", "Scrubber 5", "Acid Stage 1", "Acid Stage 2", "Acid Stage 4",
-        "Acid Stage 5", "Alk Stage 1", "Alk Stage 2", "Alk Stage 3", "Alk Stage 4", "Alk Stage 5",
-        "ORP Range 1", "ORP Range 2", "ORP Range 3", "ORP Range 4", "ORP Range 5", "Before Treatment",
-        "Anaerobic Tanks", "T300", "T401", "T402", "T403", "T404", "Final Clarifier", "Filter Press",
-        "Biogas Tank", "Penstock", "Remarks 1", "Remarks 2", "Remarks 3", "Remarks 4", "PLC Condition",
-        "Pre Treatment", "Penstock Status", "AerobicS", "AT401", "AT402", "AT403", "AT404",
-        "AnaerobicS", "ApH", "ATemp", "ADO", "ABiogas", "Post-Treatment", "Centrifuge", "Wetsep",
-        "Marine Vessel", "Storm", "VWF", "Rundown", "101", "100", "313", "312", "410", "413",
-        "Public", "Road", "Marine", "Scrubbers", "VWS", "401 DO", "402 DO", "403 DO", "404 DO",
-        "401 Temp", "402 Temp", "403 Temp", "404 Temp", "404 pH", "Number of Containers Completed", 
-        "Wheelstopper Conditions", "Wheelstopper Conditions (Remarks)", "DG Storage", "C6A", "Container No. (C6A)", "Timestamp"
-      ];
-
-      const fieldNames = [
-        "txtDate", "cmbInspector", "txtTime", "cmbWeather", "chkWeightbridge1", "chkWeightbridge2",
-        "chkWeightbridge3", "chkWeightbridge4", "cmbCCTV", "cmbWeightDis", "bridgeWasteV",
-        "bridgeWasteT", "cmbPermitedW", "cmboffQ", "chktipping1", "chktipping2", "tippingWasteV",
-        "tippingWasteT", "cmbtippingPermitedW", "cmbtippingTraffic", "cmbtippingCCTV", "txtfPress",
-        "chkC1", "txtC1", "chkC2", "txtC2", "chkMF1", "chkC3", "txtC3", "chkMF2", "chkC4",
-        "txtC4", "chkMF3", "chkC5", "txtC5", "chkMF4", "chkC6", "txtC6", "chkMF5", "chkC7",
-        "txtC7", "chkMF6", "chkC8", "txtC8", "chkC9", "txtC9", "chkC10", "txtC10", "chkScreen1",
-        "chkScreen2", "chkScreen3", "txt1A", "txt1B", "txt2A", "txt2B", "chkDAF1", "chkDAF2",
-        "cmbGTW", "chkCrane1", "chkCrane2", "chkCHU1", "chkCHU2", "txt145B", "txt550FV",
-        "txt155W", "txtOthers", "chkLaiwan", "chkNgonshuen", "chkWash1", "chkWash2", "chkWash3",
-        "cmbCleanliness", "cmbMinutes", "cmbHours", "cmbCurtain", "chkScrubber1", "chkScrubber2",
-        "chkScrubber3", "chkScrubber4", "chkScrubber5", "txtAcid1", "txtAcid2", "txtAcid4",
-        "txtAcid5", "txtAlk1", "txtAlk2", "txtAlk3", "txtAlk4", "txtAlk5", "txtORP1", "txtORP2",
-        "txtORP3", "txtORP4", "txtORP5", "cmbBefore", "cmbAnaerobic", "chkT300", "chkT401",
-        "chkT402", "chkT403", "chkT404", "cmbFinal", "cmbFilter", "cmbBiogas", "cmbPenstock",
-        "txtRemarks1", "txtRemarks2", "txtRemarks3", "txtRemarks4", "cmbPLC", "cmbPreT",
-        "cmbPenstockChamber", "cmbAerobicS", "txtAT401", "txtAT402", "txtAT403", "txtAT404",
-        "cmbAnaerobicS", "txtApH", "txtATemp", "txtADO", "txtABiogas", "cmbPostT", "cmbCent",
-        "txtWetsep", "txtMarineVessel", "txtStorm", "txtVWF", "txtRundown", "txt101", "txt100",
-        "txt313", "txt312", "txt410", "txt413", "txtPublic", "txtRoad", "txtMarine", "txtScrubbers",
-        "txtVWS", "txt401DO", "txt402DO", "txt403DO", "txt404DO", "txt401Temp", "txt402Temp",
-        "txt403Temp", "txt404Temp", "txt404pH", "txtContainers", "chkWheelstoppers", "txtWheelstoppers",
-        "cmbDG", "chkC6A", "txtC6A", "timestamp"
-      ];
-
-      return [
-        headers,
-        ...uppercaseData.map(item => fieldNames.map(field => {
-          if (field === "txtDate" && item[field]) {
-            return reformatDate(item[field]);
-          }
-          return item[field] || '';
-        }))
-      ];
-    };
-
-    // EXPORT TO EXCEL & SYNC TO CLOUD
+    // EXPORT TO EXCEL & SYNC TO CLOUD (BOTH use same Excel format)
     document.getElementById('exportExcelBtn').addEventListener('click', async (e) => {
       e.preventDefault();
       
@@ -1777,21 +1811,17 @@
       showStatusMessage('📤 Starting export & sync process...', 'info');
       
       try {
-        // Step 1: Save current form data to BOTH databases
-        const currentFormData = collectFormDataForSync();
+        // Step 1: Save current form data in Excel row format to Sync DB for R2
+        const excelFormData = collectFormDataForR2();
+        const syncRecordId = await saveToSyncDB(excelFormData);
+        showStatusMessage(`💾 Current data formatted for R2 (ID: ${syncRecordId.substring(0, 20)}...)`, 'success');
         
-        // Save to Sync DB for cloud sync
-        const syncRecordId = await saveToSyncDB(currentFormData);
-        showStatusMessage(`💾 Current data saved for cloud sync (ID: ${syncRecordId.substring(0, 20)}...)`, 'success');
-        
-        // Save to Main DB for Excel export
-        await saveToMainDB({
-          ...currentFormData,
-          timestamp: new Date().toISOString()
-        });
+        // Step 2: Also save raw data to Main DB for Excel export backup
+        const rawFormData = collectRawFormData();
+        await saveToMainDB(rawFormData);
         showStatusMessage(`💾 Current data saved to local database`, 'success');
         
-        // Step 2: Sync ALL pending records to Cloudflare R2
+        // Step 3: Sync ALL pending records to Cloudflare R2
         showStatusMessage(`☁️ Syncing to Cloudflare R2...`, 'info');
         const syncResult = await syncAllPending();
         
@@ -1801,18 +1831,23 @@
           showStatusMessage(`⚠️ Sync failed for ${syncResult.failed} records`, 'warning');
         }
         
-        // Step 3: Get all data from main DB for Excel export
-        const allData = await getAllMainRecords();
+        // Step 4: Get all records from main DB and convert to Excel format
+        const allExcelRows = await getAllRecordsForExcel();
         
-        if (!allData || allData.length === 0) {
+        if (!allExcelRows || allExcelRows.length === 0) {
           showStatusMessage('No data to export to Excel', 'warning');
           return;
         }
         
-        // Step 4: Generate and download Excel file
-        showStatusMessage(`📊 Generating Excel file with ${allData.length} record(s)...`, 'info');
+        // Step 5: Generate and download Excel file
+        showStatusMessage(`📊 Generating Excel file with ${allExcelRows.length} record(s)...`, 'info');
         
-        const worksheetData = buildExcelData(allData);
+        // Build worksheet data: headers + rows
+        const worksheetData = [
+          EXCEL_HEADERS,
+          ...allExcelRows.map(row => EXCEL_HEADERS.map(header => row[header] || ''))
+        ];
+        
         const ws = XLSX.utils.aoa_to_sheet(worksheetData);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Inspections");
@@ -1821,14 +1856,14 @@
         const timestamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
         XLSX.writeFile(wb, `inspections_${timestamp}.xlsx`);
         
-        showStatusMessage(`✅ Excel exported with ${allData.length} records!`, 'success');
+        showStatusMessage(`✅ Excel exported with ${allExcelRows.length} records!`, 'success');
         
-        // Step 5: Clear both databases after successful export
+        // Step 6: Clear both databases after successful export
         await clearMainDB();
         await clearSyncDB();
         showStatusMessage(`🗑️ Local databases cleared`, 'success');
         
-        // Step 6: Reset form
+        // Step 7: Reset form
         resetForm();
         showStatusMessage(`🎉 Export & sync complete! Form is ready for next inspection.`, 'success');
         
@@ -1848,10 +1883,10 @@
       showStatusMessage('☁️ Starting cloud sync...', 'info');
       
       try {
-        // Save current form data to sync DB
-        const currentFormData = collectFormDataForSync();
-        const syncRecordId = await saveToSyncDB(currentFormData);
-        showStatusMessage(`💾 Current data saved for sync (ID: ${syncRecordId.substring(0, 20)}...)`, 'success');
+        // Save current form data to sync DB in Excel row format
+        const excelFormData = collectFormDataForR2();
+        const syncRecordId = await saveToSyncDB(excelFormData);
+        showStatusMessage(`💾 Current data formatted for R2 (ID: ${syncRecordId.substring(0, 20)}...)`, 'success');
         
         // Sync to cloud
         const syncResult = await syncAllPending();
@@ -1864,11 +1899,9 @@
           showStatusMessage(`⚠️ Sync failed for ${syncResult.failed} records. Will retry later.`, 'warning');
         }
         
-        // Also save to main DB for backup
-        await saveToMainDB({
-          ...currentFormData,
-          timestamp: new Date().toISOString()
-        });
+        // Also save raw data to main DB for backup
+        const rawFormData = collectRawFormData();
+        await saveToMainDB(rawFormData);
         
         // Reset form after successful save
         resetForm();
@@ -1911,7 +1944,7 @@
         bridgeWasteTInput.addEventListener('change', () => formatBridgeWasteT(bridgeWasteTInput));
       }
       
-      showStatusMessage('✅ System ready - Data will be saved locally and can be synced to cloud', 'success');
+      showStatusMessage('✅ System ready - Data stored in Excel format for R2 sync', 'success');
     });
 
     document.querySelector('.container').addEventListener('click', (e) => {
