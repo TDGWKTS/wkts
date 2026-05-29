@@ -1438,38 +1438,38 @@ const FIELD_NAMES = [
 
     // ========== CONVERT RAW DATA TO EXCEL ROW (keeps true/false as strings) ==========
     const convertToExcelRow = (rawData) => {
-      const processedData = { ...rawData };
-      
-      // Uppercase specific fields
-      const uppercaseFields = [
-        'bridgeWasteV', 'bridgeWasteT', 'tippingWasteV', 'tippingWasteT', 
-        'txtC1', 'txtC2', 'txtC3', 'txtC4', 'txtC5', 'txtC6', 'txtC7', 'txtC8', 'txtC9', 'txtC10', 'txtC6A'
-      ];
-      uppercaseFields.forEach(field => {
-        if (processedData[field] && typeof processedData[field] === 'string') {
-          processedData[field] = processedData[field].toUpperCase();
-        }
-      });
-      
-      // Build the row - keep true/false as is (no conversion to ✓)
-      const row = {};
-      for (let i = 0; i < FIELD_NAMES.length; i++) {
-        const fieldName = FIELD_NAMES[i];
-        let value = processedData[fieldName] !== undefined && processedData[fieldName] !== null ? processedData[fieldName] : '';
-        
-        // Format date
-        if (fieldName === "txtDate" && value) {
-          if (value.includes('-')) {
-            const [year, month, day] = value.split('-');
-            value = `${day}/${month}/${year}`;
-          }
-        }
-        
-        // Store value at index for proper column alignment
-        row[i] = value;
+  const processedData = { ...rawData };
+  
+  // Uppercase specific fields
+  const uppercaseFields = [
+    'bridgeWasteV', 'bridgeWasteT', 'tippingWasteV', 'tippingWasteT', 
+    'txtC1', 'txtC2', 'txtC3', 'txtC4', 'txtC5', 'txtC6', 'txtC7', 'txtC8', 'txtC9', 'txtC10', 'txtC6A'
+  ];
+  uppercaseFields.forEach(field => {
+    if (processedData[field] && typeof processedData[field] === 'string') {
+      processedData[field] = processedData[field].toUpperCase();
+    }
+  });
+  
+  // Build the row with HEADER names as keys
+  const row = {};
+  for (let i = 0; i < FIELD_NAMES.length; i++) {
+    const fieldName = FIELD_NAMES[i];
+    const header = EXCEL_HEADERS[i];
+    let value = processedData[fieldName] !== undefined && processedData[fieldName] !== null ? processedData[fieldName] : '';
+    
+    // Format date
+    if (fieldName === "txtDate" && value) {
+      if (value.includes('-')) {
+        const [year, month, day] = value.split('-');
+        value = `${day}/${month}/${year}`;
       }
-      return row;
-    };
+    }
+    
+    row[header] = value;
+  }
+  return row;
+};
 
     // Initialize IndexedDB
     const initDB = () => {
@@ -1916,7 +1916,7 @@ const FIELD_NAMES = [
         // Build worksheet data - headers and rows
         const worksheetData = [
           EXCEL_HEADERS,
-          ...allExcelRows.map(row => FIELD_NAMES.map((_, idx) => row[idx] !== undefined ? row[idx] : ''))
+            ...allExcelRows.map(row => EXCEL_HEADERS.map(header => row[header] !== undefined ? row[header] : ''))
         ];
         
         const ws = XLSX.utils.aoa_to_sheet(worksheetData);
