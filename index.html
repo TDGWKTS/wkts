@@ -1368,9 +1368,12 @@ const EXCEL_HEADERS = [
   "Status", "Centrifuge", "Wetsep", "Marine Vessel", "Storm  water", "VWF wastewater",
   "Rundown Screen", "FIQT -101", "FIQT -100", "FIT-313", "FIT-312", "T410", "FIT-413",
   "Public", "Road Wash", "Marine", "Scrubbers", "VWS",
-  "DO T-401", "DO T-402", "DO T-403", "DO T-404", "Temp T-401", "Temp T-402", "Temp T-403", "Temp T-404",
-  "pH T-404", "Number of Containers Completed", "Wheelstopper Conditions", "Wheelstopper Conditions (Remarks)",
-  "DG Storage", "C6A", "C6A",
+  "DO                T-401", "DO                T-402", "DO                T-403", "DO                T-404",
+  "Temp               T-401", "Temp               T-402", "Temp               T-403", "Temp               T-404",
+  "pH             T-404",
+  "Number of Containers Completed",
+  "Wheelstopper Conditions", "Wheelstopper Conditions (Remarks)",
+  "DG Storage", "C6A", "C6A"
 ];
 
 // ========== CORRECTED FIELD NAMES (Matching your form input names) ==========
@@ -1381,22 +1384,34 @@ const FIELD_NAMES = [
   "cmbPermitedW", "cmboffQ", "chktipping1", "chktipping2",
   "tippingWasteV", "tippingWasteT", "cmbtippingPermitedW", 
   "cmbtippingTraffic", "cmbtippingCCTV", "txtfPress",
-  "chkC1", "txtC1",           // First C1 = checkbox, Second C1 = container no.
-  "chkC2", "txtC2",           // First C2 = checkbox, Second C2 = container no.
+  
+  // C1: First = checkbox, Second = container number
+  "chkC1", "txtC1",
+  // C2: First = checkbox, Second = container number
+  "chkC2", "txtC2",
   "chkMF1",
+  // C3: First = checkbox, Second = container number
   "chkC3", "txtC3",
   "chkMF2",
+  // C4: First = checkbox, Second = container number
   "chkC4", "txtC4",
   "chkMF3",
+  // C5: First = checkbox, Second = container number
   "chkC5", "txtC5",
   "chkMF4",
+  // C6: First = checkbox, Second = container number
   "chkC6", "txtC6",
   "chkMF5",
+  // C7: First = checkbox, Second = container number
   "chkC7", "txtC7",
   "chkMF6",
+  // C8: First = checkbox, Second = container number
   "chkC8", "txtC8",
+  // C9: First = checkbox, Second = container number
   "chkC9", "txtC9",
+  // C10: First = checkbox, Second = container number
   "chkC10", "txtC10",
+  
   "chkScreen1", "chkScreen2", "chkScreen3",
   "txt1A", "txt1B", "txt2A", "txt2B",
   "chkDAF1", "chkDAF2", "cmbGTW",
@@ -1426,14 +1441,15 @@ const FIELD_NAMES = [
   "txt404pH",
   "txtContainers",
   "chkWheelstoppers", "txtWheelstoppers",
-  "cmbDG", "C6A", "C6A",
+  "cmbDG",
+  "chkC6A", "txtC6A",   
   "timestamp"
 ];
 
     const convertToExcelRow = (rawData) => {
   const uppercaseFields = [
     'bridgeWasteV', 'bridgeWasteT', 'tippingWasteV', 'tippingWasteT', 
-    'txtC1', 'txtC2', 'txtC3', 'txtC4', 'txtC5', 'txtC6', 'txtC7', 'txtC8', 'txtC9', 'txtC10'
+    'txtC1', 'txtC2', 'txtC3', 'txtC4', 'txtC5', 'txtC6', 'txtC7', 'txtC8', 'txtC9', 'txtC10', 'txtC6A'
   ];
   
   const processedData = { ...rawData };
@@ -1446,9 +1462,10 @@ const FIELD_NAMES = [
   // Handle checkboxes (convert to true/false strings)
   const checkboxFields = [
     'chkWeightbridge1', 'chkWeightbridge2', 'chkWeightbridge3', 'chkWeightbridge4',
-    'chktipping1', 'chktipping2', 'chkC1', 'chkC2', 'chkC3', 'chkC4', 'chkC5',
-    'chkC6', 'chkC7', 'chkC8', 'chkC9', 'chkC10', 'chkMF1', 'chkMF2', 'chkMF3',
-    'chkMF4', 'chkMF5', 'chkMF6', 'chkScreen1', 'chkScreen2', 'chkScreen3',
+    'chktipping1', 'chktipping2', 
+    'chkC1', 'chkC2', 'chkC3', 'chkC4', 'chkC5', 'chkC6', 'chkC7', 'chkC8', 'chkC9', 'chkC10', 'chkC6A',
+    'chkMF1', 'chkMF2', 'chkMF3', 'chkMF4', 'chkMF5', 'chkMF6',
+    'chkScreen1', 'chkScreen2', 'chkScreen3',
     'chkDAF1', 'chkDAF2', 'chkCrane1', 'chkCrane2', 'chkCHU1', 'chkCHU2',
     'chkLaiwan', 'chkNgonshuen', 'chkWash1', 'chkWash2', 'chkWash3',
     'chkScrubber1', 'chkScrubber2', 'chkScrubber3', 'chkScrubber4', 'chkScrubber5',
