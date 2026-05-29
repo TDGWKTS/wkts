@@ -1459,7 +1459,7 @@ const FIELD_NAMES = [
     }
   });
   
-  // Handle checkboxes (convert to true/false strings)
+  // Handle checkboxes - ensure they are 'true' or 'false' strings
   const checkboxFields = [
     'chkWeightbridge1', 'chkWeightbridge2', 'chkWeightbridge3', 'chkWeightbridge4',
     'chktipping1', 'chktipping2', 
@@ -1472,11 +1472,20 @@ const FIELD_NAMES = [
     'chkT300', 'chkT401', 'chkT402', 'chkT403', 'chkT404', 'chkWheelstoppers'
   ];
   
+  // IMPORTANT: Set default values for checkboxes that are not in rawData (should be true by default in your form)
   checkboxFields.forEach(field => {
     if (processedData[field] === 'true' || processedData[field] === true) {
       processedData[field] = 'true';
     } else if (processedData[field] === 'false' || processedData[field] === false) {
       processedData[field] = 'false';
+    } else if (processedData[field] === undefined || processedData[field] === null || processedData[field] === '') {
+      // For C1-C10 checkboxes, default to 'true' if not set (since they are checked by default in the form)
+      if (field === 'chkC1' || field === 'chkC2' || field === 'chkC3' || field === 'chkC4' || field === 'chkC5' ||
+          field === 'chkC6'|| field === 'chkC6A' || field === 'chkC7' || field === 'chkC8' || field === 'chkC9' || field === 'chkC10') {
+        processedData[field] = 'true';
+      } else {
+        processedData[field] = 'false';
+      }
     }
   });
   
@@ -1484,7 +1493,7 @@ const FIELD_NAMES = [
   for (let i = 0; i < FIELD_NAMES.length; i++) {
     const fieldName = FIELD_NAMES[i];
     const header = EXCEL_HEADERS[i];
-    let value = processedData[fieldName] || '';
+    let value = processedData[fieldName] !== undefined ? processedData[fieldName] : '';
     
     if (fieldName === "txtDate" && value) {
       if (value.includes('-')) {
