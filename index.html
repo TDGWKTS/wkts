@@ -1308,8 +1308,8 @@
     <button class="btn-export" id="exportExcelBtn">📊 Export to Excel & Sync to Cloud</button>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
     let currentPage = 1;
     const pages = ['page1', 'page2', 'page3', 'page4'];
     let db;
@@ -1436,7 +1436,7 @@
       "timestamp"
     ];
 
-    // ========== CONVERT RAW DATA TO EXCEL ROW ==========
+    // ========== CONVERT RAW DATA TO EXCEL ROW (keeps true/false as strings) ==========
     const convertToExcelRow = (rawData) => {
       const processedData = { ...rawData };
       
@@ -1451,11 +1451,10 @@
         }
       });
       
-      // Build the row
+      // Build the row - keep true/false as is (no conversion to ✓)
       const row = {};
       for (let i = 0; i < FIELD_NAMES.length; i++) {
         const fieldName = FIELD_NAMES[i];
-        const header = EXCEL_HEADERS[i];
         let value = processedData[fieldName] !== undefined && processedData[fieldName] !== null ? processedData[fieldName] : '';
         
         // Format date
@@ -1466,7 +1465,8 @@
           }
         }
         
-        row[header] = value;
+        // Store value at index for proper column alignment
+        row[i] = value;
       }
       return row;
     };
@@ -1526,7 +1526,7 @@
         rawData[key] = value;
       }
       
-      // Capture ALL checkboxes
+      // Capture ALL checkboxes explicitly
       const allCheckboxes = [
         'chkWeightbridge1', 'chkWeightbridge2', 'chkWeightbridge3', 'chkWeightbridge4',
         'chktipping1', 'chktipping2',
@@ -1913,9 +1913,10 @@
         
         showStatusMessage(`📊 Generating Excel file with ${allExcelRows.length} record(s)...`, 'info');
         
+        // Build worksheet data - headers and rows
         const worksheetData = [
           EXCEL_HEADERS,
-          ...allExcelRows.map(row => EXCEL_HEADERS.map(header => row[header] || ''))
+          ...allExcelRows.map(row => FIELD_NAMES.map((_, idx) => row[idx] !== undefined ? row[idx] : ''))
         ];
         
         const ws = XLSX.utils.aoa_to_sheet(worksheetData);
@@ -1990,6 +1991,6 @@
       showStatusMessage('🔄 Connection restored. Syncing pending records...', 'info');
       syncAllPending();
     });
-  </script>
+</script>
 </body>
 </html>
