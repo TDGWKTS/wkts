@@ -1553,27 +1553,48 @@ const FIELD_NAMES = [
     };
 
     // Collect current form data
-    const collectRawFormData = () => {
-      const form = document.getElementById('inspectionForm');
-      const formData = new FormData(form);
-      const rawData = {};
-      
-      for (let [key, value] of formData.entries()) {
-        rawData[key] = value;
-      }
-      
-      document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-        rawData[cb.name] = cb.checked ? 'true' : 'false';
-      });
-      
-      rawData.timestamp = new Date().toISOString();
-      rawData.stationId = STATION_ID;
-      
-      const dateInput = document.querySelector('input[name="txtDate"]');
-      if (dateInput) rawData.txtDate = dateInput.value;
-      
-      return rawData;
-    };
+const collectRawFormData = () => {
+  const form = document.getElementById('inspectionForm');
+  const formData = new FormData(form);
+  const rawData = {};
+  
+  for (let [key, value] of formData.entries()) {
+    rawData[key] = value;
+  }
+  
+  // IMPORTANT: Explicitly capture ALL checkboxes, even unchecked ones
+  // This ensures unchecked checkboxes are recorded as 'false'
+  const allCheckboxes = [
+    'chkWeightbridge1', 'chkWeightbridge2', 'chkWeightbridge3', 'chkWeightbridge4',
+    'chktipping1', 'chktipping2',
+    'chkC1', 'chkC2', 'chkC3', 'chkC4', 'chkC5', 'chkC6', 'chkC7', 'chkC8', 'chkC9', 'chkC10', 'chkC6A',
+    'chkMF1', 'chkMF2', 'chkMF3', 'chkMF4', 'chkMF5', 'chkMF6',
+    'chkScreen1', 'chkScreen2', 'chkScreen3',
+    'chkDAF1', 'chkDAF2', 'chkCrane1', 'chkCrane2', 'chkCHU1', 'chkCHU2',
+    'chkLaiwan', 'chkNgonshuen', 'chkWash1', 'chkWash2', 'chkWash3',
+    'chkScrubber1', 'chkScrubber2', 'chkScrubber3', 'chkScrubber4', 'chkScrubber5',
+    'chkT300', 'chkT401', 'chkT402', 'chkT403', 'chkT404', 'chkWheelstoppers'
+  ];
+  
+  allCheckboxes.forEach(cbName => {
+    const checkbox = document.querySelector(`input[name="${cbName}"]`);
+    if (checkbox) {
+      // If checkbox exists and is checked, set to 'true', otherwise 'false'
+      rawData[cbName] = checkbox.checked ? 'true' : 'false';
+    } else {
+      // If checkbox doesn't exist in DOM, default to 'false'
+      rawData[cbName] = 'false';
+    }
+  });
+  
+  rawData.timestamp = new Date().toISOString();
+  rawData.stationId = STATION_ID;
+  
+  const dateInput = document.querySelector('input[name="txtDate"]');
+  if (dateInput) rawData.txtDate = dateInput.value;
+  
+  return rawData;
+};
 
     // Validate required fields
     const validateRequiredFields = (rawData) => {
