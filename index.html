@@ -1308,7 +1308,7 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script>
+<script>
     let currentPage = 1;
     const pages = ['page1', 'page2', 'page3', 'page4'];
     let db;
@@ -1320,193 +1320,213 @@
     let syncDB;
 
     // ========== CORRECTED EXCEL HEADERS (Matching your Print sheet) ==========
-const EXCEL_HEADERS = [
-  "Date", "Inspected By", "Time", "Weather", 
-  "WB No.1", "WB No.2", "WB No.3", "WB No.4",
-  "CCTV/ Recording System", "Weight Display correctness", 
-  "Vehicle No.", "Type/ Origin", "Permitted waste?", "Any off-site queuing?", 
-  "Inspected by EPD", "Inspected by CHEC",
-  "Vehicle No.", "Waste Type", "Permitted Waste", 
-  "Traffic control signal", "CCTV system",
-  "Filter Press", 
-  "C1", "C1", 
-  "C2", "C2", 
-  "MF1", 
-  "C3", "C3", 
-  "MF2", 
-  "C4", "C4", 
-  "MF3", 
-  "C5", "C5", 
-  "MF4", 
-  "C6", "C6", 
-  "MF5", 
-  "C7", "C7", 
-  "MF6", 
-  "C8", "C8", 
-  "C9", "C9", 
-  "C10", "C10",
-  "Screen 1", "Screen 2", "Screen 3",
-  "1A", "1B", "2A", "2B",
-  "DAF 1", "DAF 2", "Area Cleaned",
-  "Crane 1", "Crane 2", "CHU 1", "CHU 2",
-  "145B", "55FV", "155WD", "Others",
-  "Lai Wan", "Ngon Shuen",
-  "Vehicle Wash 1", "Vehicle Wash 2", "Vehicle Wash 3",
-  "VW Clean ?", "Waste clearance > 30 mins? ", "Off-site litter > 24 hrs? ",
-  "Air Curtain",
-  "Scrubber 1", "Scrubber 2", "Scrubber 3", "Scrubber 4", "Scrubber 5",
-  "Acid Scrubber 1", "Acid Scrubber 2", "Acid Scrubber 4", "Acid Scrubber 5",
-  "Alk Scrubber 1", "Alk Scrubber 2", "Alk Scrubber 3", "Alk Scrubber 4", "Alk Scrubber 5",
-  "ORP 1", "ORP 2", "ORP 3", "ORP 4", "ORP 5",
-  "Before Treatment ", "Anaerobic Tanks",
-  "Aerobic Tank T300", "Aerobic Tank T401", "Aerobic Tank T402", "Aerobic Tank T403", "Aerobic Tank T404",
-  "Final Clarifer", "Filter Press", "Bigas Tank", "Penstock",
-  "Remarks1", "Remarks2", "Remarks3", "Remarks 4",
-  "PLC", "Pre-Treat", "Penstock", "Status",
-  "T-401", "T-402", "T-403", "T-404",
-  "Status", "pH", "Temp", "DO", "Biogas Level",
-  "Status", "Centrifuge", "Wetsep", "Marine Vessel", "Storm  water", "VWF wastewater",
-  "Rundown Screen", "FIQT -101", "FIQT -100", "FIT-313", "FIT-312", "T410", "FIT-413",
-  "Public", "Road Wash", "Marine", "Scrubbers", "VWS",
-  "DO                T-401", "DO                T-402", "DO                T-403", "DO                T-404",
-  "Temp               T-401", "Temp               T-402", "Temp               T-403", "Temp               T-404",
-  "pH             T-404",
-  "Number of Containers Completed",
-  "Wheelstopper Conditions", "Wheelstopper Conditions (Remarks)",
-  "DG Storage", "C6A", "C6A"
-];
+    const EXCEL_HEADERS = [
+      "Date", "Inspected By", "Time", "Weather", 
+      "WB No.1", "WB No.2", "WB No.3", "WB No.4",
+      "CCTV/ Recording System", "Weight Display correctness", 
+      "Vehicle No.", "Type/ Origin", "Permitted waste?", "Any off-site queuing?", 
+      "Inspected by EPD", "Inspected by CHEC",
+      "Vehicle No.", "Waste Type", "Permitted Waste", 
+      "Traffic control signal", "CCTV system",
+      "Filter Press", 
+      "C1", "C1", 
+      "C2", "C2", 
+      "MF1", 
+      "C3", "C3", 
+      "MF2", 
+      "C4", "C4", 
+      "MF3", 
+      "C5", "C5", 
+      "MF4", 
+      "C6", "C6", 
+      "MF5", 
+      "C7", "C7", 
+      "MF6", 
+      "C8", "C8", 
+      "C9", "C9", 
+      "C10", "C10",
+      "Screen 1", "Screen 2", "Screen 3",
+      "1A", "1B", "2A", "2B",
+      "DAF 1", "DAF 2", "Area Cleaned",
+      "Crane 1", "Crane 2", "CHU 1", "CHU 2",
+      "145B", "55FV", "155WD", "Others",
+      "Lai Wan", "Ngon Shuen",
+      "Vehicle Wash 1", "Vehicle Wash 2", "Vehicle Wash 3",
+      "VW Clean ?", "Waste clearance > 30 mins? ", "Off-site litter > 24 hrs? ",
+      "Air Curtain",
+      "Scrubber 1", "Scrubber 2", "Scrubber 3", "Scrubber 4", "Scrubber 5",
+      "Acid Scrubber 1", "Acid Scrubber 2", "Acid Scrubber 4", "Acid Scrubber 5",
+      "Alk Scrubber 1", "Alk Scrubber 2", "Alk Scrubber 3", "Alk Scrubber 4", "Alk Scrubber 5",
+      "ORP 1", "ORP 2", "ORP 3", "ORP 4", "ORP 5",
+      "Before Treatment ", "Anaerobic Tanks",
+      "Aerobic Tank T300", "Aerobic Tank T401", "Aerobic Tank T402", "Aerobic Tank T403", "Aerobic Tank T404",
+      "Final Clarifer", "Filter Press", "Bigas Tank", "Penstock",
+      "Remarks1", "Remarks2", "Remarks3", "Remarks 4",
+      "PLC", "Pre-Treat", "Penstock", "Status",
+      "T-401", "T-402", "T-403", "T-404",
+      "Status", "pH", "Temp", "DO", "Biogas Level",
+      "Status", "Centrifuge", "Wetsep", "Marine Vessel", "Storm  water", "VWF wastewater",
+      "Rundown Screen", "FIQT -101", "FIQT -100", "FIT-313", "FIT-312", "T410", "FIT-413",
+      "Public", "Road Wash", "Marine", "Scrubbers", "VWS",
+      "DO                T-401", "DO                T-402", "DO                T-403", "DO                T-404",
+      "Temp               T-401", "Temp               T-402", "Temp               T-403", "Temp               T-404",
+      "pH             T-404",
+      "Number of Containers Completed",
+      "Wheelstopper Conditions", "Wheelstopper Conditions (Remarks)",
+      "DG Storage", "C6A", "C6A"
+    ];
 
-// ========== CORRECTED FIELD NAMES (Matching your form input names) ==========
-const FIELD_NAMES = [
-  "txtDate", "cmbInspector", "txtTime", "cmbWeather", 
-  "chkWeightbridge1", "chkWeightbridge2", "chkWeightbridge3", "chkWeightbridge4",
-  "cmbCCTV", "cmbWeightDis", "bridgeWasteV", "bridgeWasteT", 
-  "cmbPermitedW", "cmboffQ", "chktipping1", "chktipping2",
-  "tippingWasteV", "tippingWasteT", "cmbtippingPermitedW", 
-  "cmbtippingTraffic", "cmbtippingCCTV", "txtfPress",
-  
-  // C1: First = checkbox, Second = container number
-  "chkC1", "txtC1",
-  // C2: First = checkbox, Second = container number
-  "chkC2", "txtC2",
-  "chkMF1",
-  // C3: First = checkbox, Second = container number
-  "chkC3", "txtC3",
-  "chkMF2",
-  // C4: First = checkbox, Second = container number
-  "chkC4", "txtC4",
-  "chkMF3",
-  // C5: First = checkbox, Second = container number
-  "chkC5", "txtC5",
-  "chkMF4",
-  // C6: First = checkbox, Second = container number
-  "chkC6", "txtC6",
-  "chkMF5",
-  // C7: First = checkbox, Second = container number
-  "chkC7", "txtC7",
-  "chkMF6",
-  // C8: First = checkbox, Second = container number
-  "chkC8", "txtC8",
-  // C9: First = checkbox, Second = container number
-  "chkC9", "txtC9",
-  // C10: First = checkbox, Second = container number
-  "chkC10", "txtC10",
-  
-  "chkScreen1", "chkScreen2", "chkScreen3",
-  "txt1A", "txt1B", "txt2A", "txt2B",
-  "chkDAF1", "chkDAF2", "cmbGTW",
-  "chkCrane1", "chkCrane2", "chkCHU1", "chkCHU2",
-  "txt145B", "txt550FV", "txt155W", "txtOthers",
-  "chkLaiwan", "chkNgonshuen",
-  "chkWash1", "chkWash2", "chkWash3",
-  "cmbCleanliness", "cmbMinutes", "cmbHours",
-  "cmbCurtain",
-  "chkScrubber1", "chkScrubber2", "chkScrubber3", "chkScrubber4", "chkScrubber5",
-  "txtAcid1", "txtAcid2", "txtAcid4", "txtAcid5",
-  "txtAlk1", "txtAlk2", "txtAlk3", "txtAlk4", "txtAlk5",
-  "txtORP1", "txtORP2", "txtORP3", "txtORP4", "txtORP5",
-  "cmbBefore", "cmbAnaerobic",
-  "chkT300", "chkT401", "chkT402", "chkT403", "chkT404",
-  "cmbFinal", "cmbFilter", "cmbBiogas", "cmbPenstock",
-  "txtRemarks1", "txtRemarks2", "txtRemarks3", "txtRemarks4",
-  "cmbPLC", "cmbPreT", "cmbPenstockChamber", "cmbAerobicS",
-  "txtAT401", "txtAT402", "txtAT403", "txtAT404",
-  "cmbAnaerobicS", "txtApH", "txtATemp", "txtADO", "txtABiogas",
-  "cmbPostT", "cmbCent",
-  "txtWetsep", "txtMarineVessel", "txtStorm", "txtVWF", "txtRundown",
-  "txt101", "txt100", "txt313", "txt312", "txt410", "txt413",
-  "txtPublic", "txtRoad", "txtMarine", "txtScrubbers", "txtVWS",
-  "txt401DO", "txt402DO", "txt403DO", "txt404DO",
-  "txt401Temp", "txt402Temp", "txt403Temp", "txt404Temp",
-  "txt404pH",
-  "txtContainers",
-  "chkWheelstoppers", "txtWheelstoppers",
-  "cmbDG",
-  "chkC6A", "txtC6A",   
-  "timestamp"
-];
+    // ========== CORRECTED FIELD NAMES (Matching your form input names) ==========
+    const FIELD_NAMES = [
+      "txtDate", "cmbInspector", "txtTime", "cmbWeather", 
+      "chkWeightbridge1", "chkWeightbridge2", "chkWeightbridge3", "chkWeightbridge4",
+      "cmbCCTV", "cmbWeightDis", "bridgeWasteV", "bridgeWasteT", 
+      "cmbPermitedW", "cmboffQ", "chktipping1", "chktipping2",
+      "tippingWasteV", "tippingWasteT", "cmbtippingPermitedW", 
+      "cmbtippingTraffic", "cmbtippingCCTV", "txtfPress",
+      
+      // C1: First = checkbox, Second = container number
+      "chkC1", "txtC1",
+      // C2: First = checkbox, Second = container number
+      "chkC2", "txtC2",
+      "chkMF1",
+      // C3: First = checkbox, Second = container number
+      "chkC3", "txtC3",
+      "chkMF2",
+      // C4: First = checkbox, Second = container number
+      "chkC4", "txtC4",
+      "chkMF3",
+      // C5: First = checkbox, Second = container number
+      "chkC5", "txtC5",
+      "chkMF4",
+      // C6: First = checkbox, Second = container number
+      "chkC6", "txtC6",
+      "chkMF5",
+      // C7: First = checkbox, Second = container number
+      "chkC7", "txtC7",
+      "chkMF6",
+      // C8: First = checkbox, Second = container number
+      "chkC8", "txtC8",
+      // C9: First = checkbox, Second = container number
+      "chkC9", "txtC9",
+      // C10: First = checkbox, Second = container number
+      "chkC10", "txtC10",
+      
+      "chkScreen1", "chkScreen2", "chkScreen3",
+      "txt1A", "txt1B", "txt2A", "txt2B",
+      "chkDAF1", "chkDAF2", "cmbGTW",
+      "chkCrane1", "chkCrane2", "chkCHU1", "chkCHU2",
+      "txt145B", "txt550FV", "txt155W", "txtOthers",
+      "chkLaiwan", "chkNgonshuen",
+      "chkWash1", "chkWash2", "chkWash3",
+      "cmbCleanliness", "cmbMinutes", "cmbHours",
+      "cmbCurtain",
+      "chkScrubber1", "chkScrubber2", "chkScrubber3", "chkScrubber4", "chkScrubber5",
+      "txtAcid1", "txtAcid2", "txtAcid4", "txtAcid5",
+      "txtAlk1", "txtAlk2", "txtAlk3", "txtAlk4", "txtAlk5",
+      "txtORP1", "txtORP2", "txtORP3", "txtORP4", "txtORP5",
+      "cmbBefore", "cmbAnaerobic",
+      "chkT300", "chkT401", "chkT402", "chkT403", "chkT404",
+      "cmbFinal", "cmbFilter", "cmbBiogas", "cmbPenstock",
+      "txtRemarks1", "txtRemarks2", "txtRemarks3", "txtRemarks4",
+      "cmbPLC", "cmbPreT", "cmbPenstockChamber", "cmbAerobicS",
+      "txtAT401", "txtAT402", "txtAT403", "txtAT404",
+      "cmbAnaerobicS", "txtApH", "txtATemp", "txtADO", "txtABiogas",
+      "cmbPostT", "cmbCent",
+      "txtWetsep", "txtMarineVessel", "txtStorm", "txtVWF", "txtRundown",
+      "txt101", "txt100", "txt313", "txt312", "txt410", "txt413",
+      "txtPublic", "txtRoad", "txtMarine", "txtScrubbers", "txtVWS",
+      "txt401DO", "txt402DO", "txt403DO", "txt404DO",
+      "txt401Temp", "txt402Temp", "txt403Temp", "txt404Temp",
+      "txt404pH",
+      "txtContainers",
+      "chkWheelstoppers", "txtWheelstoppers",
+      "cmbDG",
+      "chkC6A", "txtC6A",   
+      "timestamp"
+    ];
 
+    // ========== CONVERT RAW DATA TO EXCEL ROW ==========
     const convertToExcelRow = (rawData) => {
-  const uppercaseFields = [
-    'bridgeWasteV', 'bridgeWasteT', 'tippingWasteV', 'tippingWasteT', 
-    'txtC1', 'txtC2', 'txtC3', 'txtC4', 'txtC5', 'txtC6', 'txtC7', 'txtC8', 'txtC9', 'txtC10', 'txtC6A'
-  ];
-  
-  const processedData = { ...rawData };
-  uppercaseFields.forEach(field => {
-    if (processedData[field] && typeof processedData[field] === 'string') {
-      processedData[field] = processedData[field].toUpperCase();
-    }
-  });
-  
-  // Handle checkboxes - ensure they are 'true' or 'false' strings
-  const checkboxFields = [
-    'chkWeightbridge1', 'chkWeightbridge2', 'chkWeightbridge3', 'chkWeightbridge4',
-    'chktipping1', 'chktipping2', 
-    'chkC1', 'chkC2', 'chkC3', 'chkC4', 'chkC5', 'chkC6', 'chkC7', 'chkC8', 'chkC9', 'chkC10', 'chkC6A',
-    'chkMF1', 'chkMF2', 'chkMF3', 'chkMF4', 'chkMF5', 'chkMF6',
-    'chkScreen1', 'chkScreen2', 'chkScreen3',
-    'chkDAF1', 'chkDAF2', 'chkCrane1', 'chkCrane2', 'chkCHU1', 'chkCHU2',
-    'chkLaiwan', 'chkNgonshuen', 'chkWash1', 'chkWash2', 'chkWash3',
-    'chkScrubber1', 'chkScrubber2', 'chkScrubber3', 'chkScrubber4', 'chkScrubber5',
-    'chkT300', 'chkT401', 'chkT402', 'chkT403', 'chkT404', 'chkWheelstoppers'
-  ];
-  
-  // IMPORTANT: Set default values for checkboxes that are not in rawData (should be true by default in your form)
-  checkboxFields.forEach(field => {
-    if (processedData[field] === 'true' || processedData[field] === true) {
-      processedData[field] = 'true';
-    } else if (processedData[field] === 'false' || processedData[field] === false) {
-      processedData[field] = 'false';
-    } else if (processedData[field] === undefined || processedData[field] === null || processedData[field] === '') {
-      // For C1-C10 checkboxes, default to 'true' if not set (since they are checked by default in the form)
-      if (field === 'chkC1' || field === 'chkC2' || field === 'chkC3' || field === 'chkC4' || field === 'chkC5' ||
-          field === 'chkC6'|| field === 'chkC6A' || field === 'chkC7' || field === 'chkC8' || field === 'chkC9' || field === 'chkC10') {
-        processedData[field] = 'true';
-      } else {
-        processedData[field] = 'false';
+      // Fields that need uppercase conversion
+      const uppercaseFields = [
+        'bridgeWasteV', 'bridgeWasteT', 'tippingWasteV', 'tippingWasteT', 
+        'txtC1', 'txtC2', 'txtC3', 'txtC4', 'txtC5', 'txtC6', 'txtC7', 'txtC8', 'txtC9', 'txtC10', 'txtC6A'
+      ];
+      
+      const processedData = { ...rawData };
+      
+      // Apply uppercase to specific fields
+      uppercaseFields.forEach(field => {
+        if (processedData[field] && typeof processedData[field] === 'string') {
+          processedData[field] = processedData[field].toUpperCase();
+        }
+      });
+      
+      // List of all checkbox fields
+      const checkboxFields = [
+        'chkWeightbridge1', 'chkWeightbridge2', 'chkWeightbridge3', 'chkWeightbridge4',
+        'chktipping1', 'chktipping2', 
+        'chkC1', 'chkC2', 'chkC3', 'chkC4', 'chkC5', 'chkC6', 'chkC7', 'chkC8', 'chkC9', 'chkC10', 'chkC6A',
+        'chkMF1', 'chkMF2', 'chkMF3', 'chkMF4', 'chkMF5', 'chkMF6',
+        'chkScreen1', 'chkScreen2', 'chkScreen3',
+        'chkDAF1', 'chkDAF2', 'chkCrane1', 'chkCrane2', 'chkCHU1', 'chkCHU2',
+        'chkLaiwan', 'chkNgonshuen', 'chkWash1', 'chkWash2', 'chkWash3',
+        'chkScrubber1', 'chkScrubber2', 'chkScrubber3', 'chkScrubber4', 'chkScrubber5',
+        'chkT300', 'chkT401', 'chkT402', 'chkT403', 'chkT404', 'chkWheelstoppers'
+      ];
+      
+      // Process checkboxes - ensure they are 'true' or 'false'
+      checkboxFields.forEach(field => {
+        const value = processedData[field];
+        if (value === true || value === 'true') {
+          processedData[field] = 'true';
+        } else if (value === false || value === 'false') {
+          processedData[field] = 'false';
+        } else if (value === undefined || value === null || value === '') {
+          // Default all checkboxes to 'false' (will be overridden for default-checked ones)
+          processedData[field] = 'false';
+        }
+      });
+      
+      // Override default-checked checkboxes to 'true'
+      const defaultCheckedBoxes = [
+        'chkScreen2', 'chkScreen3', 'chkDAF1', 'chkDAF2', 'chkCrane1', 'chkCrane2', 'chkWash1', 'chkWash2',
+        'chkWeightbridge1', 'chkWeightbridge2', 'chkWeightbridge3',
+        'chkC1', 'chkC2', 'chkMF1', 'chkC3', 'chkMF2',
+        'chkC4', 'chkMF3', 'chkC5', 'chkMF4', 'chkC6',
+        'chkC6A', 'chkMF5', 'chkC7', 'chkMF6', 'chkC8',
+        'chkC9', 'chkC10',
+        'chktipping1', 'chkT300', 'chkT401', 'chkT402', 'chkT403', 'chkT404', 'chkWheelstoppers'
+      ];
+      
+      defaultCheckedBoxes.forEach(field => {
+        if (processedData[field] === 'false' || processedData[field] === '') {
+          processedData[field] = 'true';
+        }
+      });
+      
+      // Build the row object
+      const row = {};
+      for (let i = 0; i < FIELD_NAMES.length; i++) {
+        const fieldName = FIELD_NAMES[i];
+        const header = EXCEL_HEADERS[i];
+        let value = processedData[fieldName] !== undefined ? processedData[fieldName] : '';
+        
+        // Format date to DD/MM/YYYY
+        if (fieldName === "txtDate" && value) {
+          if (value.includes('-')) {
+            const [year, month, day] = value.split('-');
+            value = `${day}/${month}/${year}`;
+          }
+        }
+        
+        row[header] = value;
       }
-    }
-  });
-  
-  const row = {};
-  for (let i = 0; i < FIELD_NAMES.length; i++) {
-    const fieldName = FIELD_NAMES[i];
-    const header = EXCEL_HEADERS[i];
-    let value = processedData[fieldName] !== undefined ? processedData[fieldName] : '';
-    
-    if (fieldName === "txtDate" && value) {
-      if (value.includes('-')) {
-        const [year, month, day] = value.split('-');
-        value = `${day}/${month}/${year}`;
-      }
-    }
-    
-    row[header] = value;
-  }
-  
-  return row;
-};
+      
+      return row;
+    };
+
     // Initialize IndexedDB
     const initDB = () => {
       return new Promise((resolve, reject) => {
@@ -1553,48 +1573,45 @@ const FIELD_NAMES = [
     };
 
     // Collect current form data
-const collectRawFormData = () => {
-  const form = document.getElementById('inspectionForm');
-  const formData = new FormData(form);
-  const rawData = {};
-  
-  for (let [key, value] of formData.entries()) {
-    rawData[key] = value;
-  }
-  
-  // IMPORTANT: Explicitly capture ALL checkboxes, even unchecked ones
-  // This ensures unchecked checkboxes are recorded as 'false'
-  const allCheckboxes = [
-    'chkWeightbridge1', 'chkWeightbridge2', 'chkWeightbridge3', 'chkWeightbridge4',
-    'chktipping1', 'chktipping2',
-    'chkC1', 'chkC2', 'chkC3', 'chkC4', 'chkC5', 'chkC6', 'chkC7', 'chkC8', 'chkC9', 'chkC10', 'chkC6A',
-    'chkMF1', 'chkMF2', 'chkMF3', 'chkMF4', 'chkMF5', 'chkMF6',
-    'chkScreen1', 'chkScreen2', 'chkScreen3',
-    'chkDAF1', 'chkDAF2', 'chkCrane1', 'chkCrane2', 'chkCHU1', 'chkCHU2',
-    'chkLaiwan', 'chkNgonshuen', 'chkWash1', 'chkWash2', 'chkWash3',
-    'chkScrubber1', 'chkScrubber2', 'chkScrubber3', 'chkScrubber4', 'chkScrubber5',
-    'chkT300', 'chkT401', 'chkT402', 'chkT403', 'chkT404', 'chkWheelstoppers'
-  ];
-  
-  allCheckboxes.forEach(cbName => {
-    const checkbox = document.querySelector(`input[name="${cbName}"]`);
-    if (checkbox) {
-      // If checkbox exists and is checked, set to 'true', otherwise 'false'
-      rawData[cbName] = checkbox.checked ? 'true' : 'false';
-    } else {
-      // If checkbox doesn't exist in DOM, default to 'false'
-      rawData[cbName] = 'false';
-    }
-  });
-  
-  rawData.timestamp = new Date().toISOString();
-  rawData.stationId = STATION_ID;
-  
-  const dateInput = document.querySelector('input[name="txtDate"]');
-  if (dateInput) rawData.txtDate = dateInput.value;
-  
-  return rawData;
-};
+    const collectRawFormData = () => {
+      const form = document.getElementById('inspectionForm');
+      const formData = new FormData(form);
+      const rawData = {};
+      
+      for (let [key, value] of formData.entries()) {
+        rawData[key] = value;
+      }
+      
+      // IMPORTANT: Explicitly capture ALL checkboxes, even unchecked ones
+      const allCheckboxes = [
+        'chkWeightbridge1', 'chkWeightbridge2', 'chkWeightbridge3', 'chkWeightbridge4',
+        'chktipping1', 'chktipping2',
+        'chkC1', 'chkC2', 'chkC3', 'chkC4', 'chkC5', 'chkC6', 'chkC7', 'chkC8', 'chkC9', 'chkC10', 'chkC6A',
+        'chkMF1', 'chkMF2', 'chkMF3', 'chkMF4', 'chkMF5', 'chkMF6',
+        'chkScreen1', 'chkScreen2', 'chkScreen3',
+        'chkDAF1', 'chkDAF2', 'chkCrane1', 'chkCrane2', 'chkCHU1', 'chkCHU2',
+        'chkLaiwan', 'chkNgonshuen', 'chkWash1', 'chkWash2', 'chkWash3',
+        'chkScrubber1', 'chkScrubber2', 'chkScrubber3', 'chkScrubber4', 'chkScrubber5',
+        'chkT300', 'chkT401', 'chkT402', 'chkT403', 'chkT404', 'chkWheelstoppers'
+      ];
+      
+      allCheckboxes.forEach(cbName => {
+        const checkbox = document.querySelector(`input[name="${cbName}"]`);
+        if (checkbox) {
+          rawData[cbName] = checkbox.checked ? 'true' : 'false';
+        } else {
+          rawData[cbName] = 'false';
+        }
+      });
+      
+      rawData.timestamp = new Date().toISOString();
+      rawData.stationId = STATION_ID;
+      
+      const dateInput = document.querySelector('input[name="txtDate"]');
+      if (dateInput) rawData.txtDate = dateInput.value;
+      
+      return rawData;
+    };
 
     // Validate required fields
     const validateRequiredFields = (rawData) => {
@@ -1784,9 +1801,12 @@ const collectRawFormData = () => {
 
       const defaultChecked = [
         'chkScreen2', 'chkScreen3', 'chkDAF1', 'chkDAF2', 'chkCrane1', 'chkCrane2', 'chkWash1', 'chkWash2',
-        'chkWeightbridge1', 'chkWeightbridge2', 'chkWeightbridge3', 'chkC1', 'chkC2', 'chkMF1', 'chkC3', 'chkMF2',
-        'chkC4', 'chkMF3', 'chkC5', 'chkMF4', 'chkC6', 'chkC6A', 'chkMF5', 'chkC7', 'chkMF6', 'chkC8', 'chkC9',
-        'chkC10', 'chktipping1', 'chkT300', 'chkT401', 'chkT402', 'chkT403', 'chkT404', 'chkWheelstoppers'
+        'chkWeightbridge1', 'chkWeightbridge2', 'chkWeightbridge3',
+        'chkC1', 'chkC2', 'chkMF1', 'chkC3', 'chkMF2',
+        'chkC4', 'chkMF3', 'chkC5', 'chkMF4', 'chkC6',
+        'chkC6A', 'chkMF5', 'chkC7', 'chkMF6', 'chkC8',
+        'chkC9', 'chkC10',
+        'chktipping1', 'chkT300', 'chkT401', 'chkT402', 'chkT403', 'chkT404', 'chkWheelstoppers'
       ];
       defaultChecked.forEach(name => {
         const checkbox = document.querySelector(`input[name="${name}"]`);
@@ -1917,7 +1937,6 @@ const collectRawFormData = () => {
     };
 
     // ========== SAVE BUTTON HANDLER ==========
-    // This saves the current form data to both databases WITHOUT clearing the form
     document.getElementById('inspectionForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       showLoading(4, true);
@@ -1925,27 +1944,20 @@ const collectRawFormData = () => {
       try {
         const rawData = collectRawFormData();
         
-        // Validate required fields
         const validationErrors = validateRequiredFields(rawData);
         if (validationErrors.length > 0) {
           showTemporaryMessage(`❌ ${validationErrors.join(', ')}`, true);
           return;
         }
         
-        // Save to Main DB (raw format for Excel export)
         await saveToMainDB(rawData);
         
-        // Convert to Excel format and save to Sync DB (for R2 sync)
         const excelData = convertToExcelRow(rawData);
         await saveToSyncDB(excelData);
         
-        // Show success message
         showTemporaryMessage(`✅ Inspection saved successfully! Ready for export.`);
         
-        // Reset the form for next inspection (clear all fields)
         resetForm();
-        
-        // Keep user on page 1 after reset
         currentPage = 1;
         showPage(1);
         
@@ -1967,7 +1979,6 @@ const collectRawFormData = () => {
       showStatusMessage('📤 Starting export & sync process...', 'info');
       
       try {
-        // Sync all pending records to Cloudflare R2
         showStatusMessage(`☁️ Syncing to Cloudflare R2...`, 'info');
         const syncResult = await syncAllPending();
         
@@ -1975,7 +1986,6 @@ const collectRawFormData = () => {
           showStatusMessage(`✅ Synced ${syncResult.synced}/${syncResult.total} records to R2`, 'success');
         }
         
-        // Get all records from main DB and convert to Excel format
         const allExcelRows = await getAllRecordsForExcel();
         
         if (!allExcelRows || allExcelRows.length === 0) {
@@ -1983,7 +1993,6 @@ const collectRawFormData = () => {
           return;
         }
         
-        // Generate and download Excel file
         showStatusMessage(`📊 Generating Excel file with ${allExcelRows.length} record(s)...`, 'info');
         
         const worksheetData = [
@@ -2001,7 +2010,6 @@ const collectRawFormData = () => {
         
         showStatusMessage(`✅ Excel exported with ${allExcelRows.length} records!`, 'success');
         
-        // Clear both databases after successful export
         await clearMainDB();
         await clearSyncDB();
         showStatusMessage(`🗑️ Local databases cleared`, 'success');
@@ -2064,6 +2072,6 @@ const collectRawFormData = () => {
       showStatusMessage('🔄 Connection restored. Syncing pending records...', 'info');
       syncAllPending();
     });
-  </script>
+</script>
 </body>
 </html>
