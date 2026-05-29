@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Daily Inspection Form - R2 Sync Matches Excel Format</title>
+  <title>Daily Inspection Form - Save then Export to Excel & R2</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body {
@@ -119,6 +119,7 @@
       border-radius: 5px;
       color: white;
       transition: background-color 0.3s;
+      cursor: pointer;
     }
     .btn-next:hover, .btn-save:hover {
       background-color: #27ae60;
@@ -161,13 +162,6 @@
       width: 100%;
       height: 3px;
       background-color: #2ecc71;
-    }
-    .section-group {
-      background-color: #f9f9f9;
-      padding: 15px;
-      border: 1px solid #e8ecef;
-      border-radius: 5px;
-      margin-bottom: 20px;
     }
     .btn-export {
       background-color: #2980b9;
@@ -231,6 +225,22 @@
     .error-border {
       border-color: #e74c3c !important;
       background-color: #fff5f5 !important;
+    }
+    .save-success {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: #27ae60;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      z-index: 10000;
+      animation: fadeOut 3s ease-in-out;
+    }
+    @keyframes fadeOut {
+      0% { opacity: 1; }
+      70% { opacity: 1; }
+      100% { opacity: 0; display: none; }
     }
   </style>
 </head>
@@ -1309,7 +1319,7 @@
     const STATION_ID = 'wkts';
     let syncDB;
 
-    // ========== EXCEL HEADERS & FIELD MAPPING (150+ fields) ==========
+    // ========== EXCEL HEADERS & FIELD MAPPING ==========
     const EXCEL_HEADERS = [
       "Date", "Inspector", "Time", "Weather", "Weightbridge 1", "Weightbridge 2",
       "Weightbridge 3", "Weightbridge 4", "CCTV", "Weight Display", "Vehicle No. (Bridge)",
@@ -1362,14 +1372,13 @@
       "cmbDG", "chkC6A", "txtC6A", "timestamp"
     ];
 
-    // Function to convert raw form data to Excel row format (flattened)
+    // Convert raw form data to Excel row format
     const convertToExcelRow = (rawData) => {
       const uppercaseFields = [
         'bridgeWasteV', 'bridgeWasteT', 'tippingWasteV', 'tippingWasteT', 'txtC1', 'txtC2', 'txtC3', 'txtC4',
         'txtC5', 'txtC6', 'txtC7', 'txtC8', 'txtC9', 'txtC10', 'txtC6A'
       ];
       
-      // Create a copy with uppercase applied
       const processedData = { ...rawData };
       uppercaseFields.forEach(field => {
         if (processedData[field] && typeof processedData[field] === 'string') {
@@ -1377,12 +1386,10 @@
         }
       });
       
-      // Build the flattened row
       const row = {};
       FIELD_NAMES.forEach((fieldName, index) => {
         let value = processedData[fieldName] || '';
         
-        // Special formatting for date
         if (fieldName === "txtDate" && value) {
           if (value.includes('-')) {
             const [year, month, day] = value.split('-');
@@ -1396,7 +1403,7 @@
       return row;
     };
 
-    // Initialize IndexedDB for main storage
+    // Initialize IndexedDB
     const initDB = () => {
       return new Promise((resolve, reject) => {
         const request = indexedDB.open('InspectionDB', 3);
@@ -1433,7 +1440,7 @@
       });
     };
 
-    // Generate session ID for sync records
+    // Generate session ID
     const generateSessionId = () => {
       const now = new Date();
       const dateStr = now.toISOString().split('T')[0];
@@ -1441,32 +1448,7 @@
       return `${STATION_ID}_${dateStr}_${timeStr}_${Math.random().toString(36).substr(2, 8)}`;
     };
 
-    // Collect current form data and convert to Excel row format for R2
-    const collectFormDataForR2 = () => {
-      const form = document.getElementById('inspectionForm');
-      const formData = new FormData(form);
-      const rawData = {};
-      
-      for (let [key, value] of formData.entries()) {
-        rawData[key] = value;
-      }
-      
-      document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-        rawData[cb.name] = cb.checked ? 'true' : 'false';
-      });
-      
-      // Add metadata
-      rawData.timestamp = new Date().toISOString();
-      rawData.stationId = STATION_ID;
-      
-      const dateInput = document.querySelector('input[name="txtDate"]');
-      if (dateInput) rawData.txtDate = dateInput.value;
-      
-      // Convert to Excel row format (flattened with headers as keys)
-      return convertToExcelRow(rawData);
-    };
-
-    // Collect current form data as raw for main DB backup
+    // Collect current form data
     const collectRawFormData = () => {
       const form = document.getElementById('inspectionForm');
       const formData = new FormData(form);
@@ -1489,7 +1471,7 @@
       return rawData;
     };
 
-    // Validate required fields (Date, Time, Inspector, Weather)
+    // Validate required fields
     const validateRequiredFields = (rawData) => {
       const errors = [];
       if (!rawData.txtDate) errors.push("Date is required");
@@ -1499,7 +1481,7 @@
       return errors;
     };
 
-    // Save to Sync DB (stores in Excel row format)
+    // Save to Sync DB
     const saveToSyncDB = (excelRowData) => {
       return new Promise((resolve, reject) => {
         if (!syncDB) reject(new Error('Database not initialized'));
@@ -1516,7 +1498,7 @@
       });
     };
 
-    // Sync to Cloudflare R2 (sends Excel row format)
+    // Sync to Cloudflare R2
     const syncToCloud = async (record) => {
       try {
         const response = await fetch(CLOUD_FUNCTION_URL, {
@@ -1544,10 +1526,9 @@
       }
     };
 
-    // Sync all pending records to cloud
+    // Sync all pending records
     const syncAllPending = async () => {
       if (!syncDB) {
-        showStatusMessage('⚠️ Database not ready', 'error');
         return { synced: 0, failed: 0 };
       }
       
@@ -1558,18 +1539,14 @@
       });
       
       if (records.length === 0) {
-        showStatusMessage('📭 No pending records to sync', 'info');
         return { synced: 0, failed: 0 };
       }
-      
-      updateStatusMessage(`📁 Syncing ${records.length} record(s) to R2...`, 'info');
       
       let synced = 0;
       let failed = 0;
       
       for (let i = 0; i < records.length; i++) {
         const record = records[i];
-        updateStatusMessage(`📤 Syncing (${i+1}/${records.length}): ${record.id.substring(0, 25)}...`, 'info');
         const result = await syncToCloud(record);
         if (result.success) {
           synced++;
@@ -1577,14 +1554,13 @@
           deleteTx.objectStore('inspections').delete(record.id);
         } else {
           failed++;
-          console.error(`Failed to sync ${record.id}:`, result.error);
         }
       }
       
       return { synced, failed, total: records.length };
     };
 
-    // Create status div for sync messages
+    // Create status div
     const createStatusDiv = () => {
       if (document.getElementById('syncStatusDiv')) return;
       const statusDiv = document.createElement('div');
@@ -1630,19 +1606,34 @@
           }
         }, 5000);
       }
+    };
+
+    // Show temporary success message
+    const showTemporaryMessage = (message, isError = false) => {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'save-success';
+      msgDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: ${isError ? '#e74c3c' : '#27ae60'};
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        z-index: 10000;
+        font-size: 14px;
+        font-weight: bold;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      `;
+      msgDiv.textContent = message;
+      document.body.appendChild(msgDiv);
       
-      console.log(`[${type.toUpperCase()}] ${message}`);
+      setTimeout(() => {
+        msgDiv.remove();
+      }, 3000);
     };
 
-    const updateStatusMessage = (message, type = 'info') => {
-      const statusDiv = document.getElementById('syncStatusDiv');
-      if (!statusDiv) return;
-      statusDiv.style.backgroundColor = type === 'error' ? '#991B1B' : (type === 'success' ? '#166534' : '#1f2937');
-      statusDiv.style.display = 'block';
-      statusDiv.innerHTML = message;
-    };
-
-    // Set default values for form fields
+    // Set default values
     const setDefaultValues = () => {
       const now = new Date();
       const dateInput = document.querySelector('input[name="txtDate"]');
@@ -1651,7 +1642,7 @@
       }
 
       const defaultValues = {
-        'cmbInspector': '',  // Empty by default - user must select
+        'cmbInspector': '',
         'cmbWeather': 'Sunny',
         'cmbCCTV': 'Normal', 'cmbWeightDis': 'Yes',
         'cmbPermitedW': 'Yes', 'cmboffQ': 'No', 'cmbtippingPermitedW': 'Yes', 'cmbtippingTraffic': 'Normal',
@@ -1678,7 +1669,7 @@
       });
     };
 
-    // Load saved data from localStorage
+    // Load saved data
     const loadSavedData = () => {
       const savedData = JSON.parse(localStorage.getItem('inspectionFormData') || '{}');
       document.querySelectorAll('input, select, textarea').forEach(element => {
@@ -1692,7 +1683,7 @@
       });
     };
 
-    // Save data to localStorage on every change
+    // Save data to localStorage
     const saveDataOnChange = () => {
       const formData = new FormData(document.getElementById('inspectionForm'));
       const data = Object.fromEntries(formData.entries());
@@ -1708,7 +1699,6 @@
       document.getElementById(`page${pageNum}`).classList.remove('hidden');
     };
 
-    // Status messages
     const showStatus = (message, type = 'success') => {
       const status = document.getElementById('status');
       status.textContent = message;
@@ -1716,7 +1706,7 @@
       setTimeout(() => status.textContent = '', 5000);
     };
 
-    // Save to main IndexedDB (stores raw data)
+    // Save to main IndexedDB
     const saveToMainDB = (data) => {
       return new Promise((resolve, reject) => {
         if (!dbInitialized || !db) reject(new Error('Database not initialized'));
@@ -1727,7 +1717,7 @@
       });
     };
 
-    // Get all records from main DB and convert to Excel format
+    // Get all records for Excel
     const getAllRecordsForExcel = () => {
       return new Promise((resolve, reject) => {
         if (!dbInitialized || !db) reject(new Error('Database not initialized'));
@@ -1742,7 +1732,7 @@
       });
     };
 
-    // Clear main database
+    // Clear databases
     const clearMainDB = () => {
       return new Promise((resolve, reject) => {
         if (!dbInitialized || !db) reject(new Error('Database not initialized'));
@@ -1753,7 +1743,6 @@
       });
     };
 
-    // Clear sync database
     const clearSyncDB = () => {
       return new Promise((resolve, reject) => {
         if (!syncDB) reject(new Error('Sync DB not initialized'));
@@ -1764,7 +1753,7 @@
       });
     };
 
-    // Reset form
+    // Reset form (clear all fields but keep defaults)
     const resetForm = () => {
       document.getElementById('inspectionForm').reset();
       localStorage.removeItem('inspectionFormData');
@@ -1776,7 +1765,7 @@
       document.getElementById(`loading${pageNum}`).style.display = show ? 'flex' : 'none';
     };
 
-    // Format time input
+    // Format time
     const formatTimeInput = (input) => {
       let value = input.value.replace(/\D/g, '');
       if (value.length === 4) {
@@ -1792,7 +1781,7 @@
       }
     };
 
-    // Format bridgeWasteT input
+    // Format bridgeWasteT
     const formatBridgeWasteT = (input) => {
       let value = input.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
       if (value.length >= 5) {
@@ -1802,66 +1791,66 @@
       }
     };
 
-    // Highlight required fields if empty
-    const highlightRequiredFields = () => {
-      const requiredFields = ['cmbInspector', 'txtTime', 'cmbWeather'];
-      let hasError = false;
+    // ========== SAVE BUTTON HANDLER ==========
+    // This saves the current form data to both databases WITHOUT clearing the form
+    document.getElementById('inspectionForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      showLoading(4, true);
       
-      requiredFields.forEach(fieldName => {
-        const field = document.querySelector(`[name="${fieldName}"]`);
-        if (field && !field.value) {
-          field.classList.add('error-border');
-          hasError = true;
-        } else if (field) {
-          field.classList.remove('error-border');
+      try {
+        const rawData = collectRawFormData();
+        
+        // Validate required fields
+        const validationErrors = validateRequiredFields(rawData);
+        if (validationErrors.length > 0) {
+          showTemporaryMessage(`❌ ${validationErrors.join(', ')}`, true);
+          return;
         }
-      });
-      
-      return !hasError;
-    };
+        
+        // Save to Main DB (raw format for Excel export)
+        await saveToMainDB(rawData);
+        
+        // Convert to Excel format and save to Sync DB (for R2 sync)
+        const excelData = convertToExcelRow(rawData);
+        await saveToSyncDB(excelData);
+        
+        // Show success message
+        showTemporaryMessage(`✅ Inspection saved successfully! Ready for export.`);
+        
+        // Reset the form for next inspection (clear all fields)
+        resetForm();
+        
+        // Keep user on page 1 after reset
+        currentPage = 1;
+        showPage(1);
+        
+      } catch (error) {
+        console.error('Save error:', error);
+        showTemporaryMessage(`❌ Failed to save: ${error.message}`, true);
+      } finally {
+        showLoading(4, false);
+      }
+    });
 
-    // EXPORT TO EXCEL & SYNC TO CLOUD
+    // ========== EXPORT TO EXCEL & SYNC TO CLOUD BUTTON ==========
     document.getElementById('exportExcelBtn').addEventListener('click', async (e) => {
       e.preventDefault();
       
-      // First, validate required fields from the current form
-      const rawFormData = collectRawFormData();
-      const validationErrors = validateRequiredFields(rawFormData);
-      
-      if (validationErrors.length > 0) {
-        const errorMessage = `Please fill in required fields:\n• ${validationErrors.join('\n• ')}`;
-        alert(errorMessage);
-        highlightRequiredFields();
-        showStatusMessage(errorMessage, 'error');
-        return;
-      }
-      
-      if (!confirm('Export all data to Excel AND sync to cloud? This will clear all local data after successful export.')) return;
+      if (!confirm('Export ALL saved data to Excel AND sync to cloud? This will clear all local data after successful export.')) return;
       
       showLoading(currentPage, true);
       showStatusMessage('📤 Starting export & sync process...', 'info');
       
       try {
-        // Step 1: Save current form data in Excel row format to Sync DB for R2
-        const excelFormData = collectFormDataForR2();
-        const syncRecordId = await saveToSyncDB(excelFormData);
-        showStatusMessage(`💾 Current data formatted for R2 (ID: ${syncRecordId.substring(0, 20)}...)`, 'success');
-        
-        // Step 2: Also save raw data to Main DB for Excel export backup
-        await saveToMainDB(rawFormData);
-        showStatusMessage(`💾 Current data saved to local database`, 'success');
-        
-        // Step 3: Sync ALL pending records to Cloudflare R2
+        // Sync all pending records to Cloudflare R2
         showStatusMessage(`☁️ Syncing to Cloudflare R2...`, 'info');
         const syncResult = await syncAllPending();
         
         if (syncResult.synced > 0) {
           showStatusMessage(`✅ Synced ${syncResult.synced}/${syncResult.total} records to R2`, 'success');
-        } else if (syncResult.failed > 0) {
-          showStatusMessage(`⚠️ Sync failed for ${syncResult.failed} records`, 'warning');
         }
         
-        // Step 4: Get all records from main DB and convert to Excel format
+        // Get all records from main DB and convert to Excel format
         const allExcelRows = await getAllRecordsForExcel();
         
         if (!allExcelRows || allExcelRows.length === 0) {
@@ -1869,7 +1858,7 @@
           return;
         }
         
-        // Step 5: Generate and download Excel file
+        // Generate and download Excel file
         showStatusMessage(`📊 Generating Excel file with ${allExcelRows.length} record(s)...`, 'info');
         
         const worksheetData = [
@@ -1887,18 +1876,17 @@
         
         showStatusMessage(`✅ Excel exported with ${allExcelRows.length} records!`, 'success');
         
-        // Step 6: Clear both databases after successful export
+        // Clear both databases after successful export
         await clearMainDB();
         await clearSyncDB();
         showStatusMessage(`🗑️ Local databases cleared`, 'success');
         
-        // Step 7: Reset form
-        resetForm();
-        showStatusMessage(`🎉 Export & sync complete! Form is ready for next inspection.`, 'success');
+        showTemporaryMessage(`🎉 Export complete! ${allExcelRows.length} records exported to Excel and synced to R2.`);
         
       } catch (error) {
         console.error('Export/Sync error:', error);
         showStatusMessage(`❌ Failed: ${error.message}`, 'error');
+        showTemporaryMessage(`❌ Export failed: ${error.message}`, true);
       } finally {
         showLoading(currentPage, false);
       }
@@ -1906,7 +1894,7 @@
 
     // Event Listeners
     document.addEventListener('DOMContentLoaded', async () => {
-      console.log('DOM fully loaded, setting up form');
+      console.log('DOM fully loaded');
       createStatusDiv();
       setDefaultValues();
       
@@ -1919,10 +1907,6 @@
       document.querySelectorAll('input, select, textarea').forEach(element => {
         element.addEventListener('change', saveDataOnChange);
         element.addEventListener('input', saveDataOnChange);
-        // Remove error border when user starts typing/selecting
-        element.addEventListener('focus', () => {
-          element.classList.remove('error-border');
-        });
       });
 
       const timeInput = document.querySelector('input[name="txtTime"]');
@@ -1937,7 +1921,7 @@
         bridgeWasteTInput.addEventListener('change', () => formatBridgeWasteT(bridgeWasteTInput));
       }
       
-      showStatusMessage('✅ System ready - Date, Time, Inspector, and Weather are required fields', 'success');
+      showTemporaryMessage('✅ System ready - Fill form and click SAVE, then EXPORT to Excel & R2');
     });
 
     document.querySelector('.container').addEventListener('click', (e) => {
@@ -1947,34 +1931,6 @@
       } else if (e.target.id.startsWith('prev') && currentPage > 1) {
         currentPage--;
         showPage(currentPage);
-      }
-    });
-
-    document.getElementById('inspectionForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      showLoading(4, true);
-      try {
-        const formData = new FormData(e.target);
-        const data = Object.fromEntries(formData.entries());
-        data.timestamp = new Date().toISOString();
-        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-          data[checkbox.name] = checkbox.checked ? 'true' : 'false';
-        });
-
-        const validationErrors = validateRequiredFields(data);
-        if (validationErrors.length > 0) {
-          showStatus(validationErrors.join(', '), 'error');
-          highlightRequiredFields();
-          return;
-        }
-
-        await saveToMainDB(data);
-        showStatus('Data saved locally!');
-        resetForm();
-      } catch (error) {
-        showStatus(`Failed to save data: ${error.message}`, 'error');
-      } finally {
-        showLoading(4, false);
       }
     });
 
