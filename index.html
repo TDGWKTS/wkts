@@ -1329,23 +1329,22 @@ const EXCEL_HEADERS = [
   "Vehicle No.", "Waste Type", "Permitted Waste", 
   "Traffic control signal", "CCTV system",
   "Filter Press", 
-  "C1", "Container No. C1", 
-  "C2", "Container No. C2", 
+  "C1", "C1", 
+  "C2", "C2", 
   "MF1", 
-  "C3", "Container No. C3", 
+  "C3", "C3", 
   "MF2", 
-  "C4", "Container No. C4", 
+  "C4", "C4", 
   "MF3", 
-  "C5", "Container No. C5", 
+  "C5", "C5", 
   "MF4", 
-  "C6", "Container No. C6", 
+  "C6", "C6", 
   "MF5", 
-  "C7", "Container No. C7", 
+  "C7", "C7", 
   "MF6", 
-  "C8", "Container No. C8", 
-  "C9", "Container No. C9", 
-  "C10", "Container No. C10",
-  "C6A", "Container No. C6A",
+  "C8", "C8", 
+  "C9", "C9", 
+  "C10", "C10",
   "Screen 1", "Screen 2", "Screen 3",
   "1A", "1B", "2A", "2B",
   "DAF 1", "DAF 2", "Area Cleaned",
@@ -1369,12 +1368,9 @@ const EXCEL_HEADERS = [
   "Status", "Centrifuge", "Wetsep", "Marine Vessel", "Storm  water", "VWF wastewater",
   "Rundown Screen", "FIQT -101", "FIQT -100", "FIT-313", "FIT-312", "T410", "FIT-413",
   "Public", "Road Wash", "Marine", "Scrubbers", "VWS",
-  "DO T-401", "DO T-402", "DO T-403", "DO T-404",
-  "Temp T-401", "Temp T-402", "Temp T-403", "Temp T-404",
-  "pH T-404",
-  "Number of Containers Completed",
-  "Wheelstopper Conditions", "Wheelstopper Conditions (Remarks)",
-  "DG Storage", "Compactor  6A", "Timestamp"
+  "DO T-401", "DO T-402", "DO T-403", "DO T-404", "Temp T-401", "Temp T-402", "Temp T-403", "Temp T-404",
+  "pH T-404", "Number of Containers Completed", "Wheelstopper Conditions", "Wheelstopper Conditions (Remarks)",
+  "DG Storage", "Compactor  6A"
 ];
 
 // ========== CORRECTED FIELD NAMES (Matching your form input names) ==========
@@ -1385,23 +1381,22 @@ const FIELD_NAMES = [
   "cmbPermitedW", "cmboffQ", "chktipping1", "chktipping2",
   "tippingWasteV", "tippingWasteT", "cmbtippingPermitedW", 
   "cmbtippingTraffic", "cmbtippingCCTV", "txtfPress",
-  "chkC1", "txtC1",           // C1 checkbox, then Container No.
-  "chkC2", "txtC2",           // C2 checkbox, then Container No.
-  "chkMF1",                   // MF1
-  "chkC3", "txtC3",           // C3 checkbox, then Container No.
-  "chkMF2",                   // MF2
-  "chkC4", "txtC4",           // C4 checkbox, then Container No.
-  "chkMF3",                   // MF3
-  "chkC5", "txtC5",           // C5 checkbox, then Container No.
-  "chkMF4",                   // MF4
-  "chkC6", "txtC6",           // C6 checkbox, then Container No.
-  "chkMF5",                   // MF5
-  "chkC7", "txtC7",           // C7 checkbox, then Container No.
-  "chkMF6",                   // MF6
-  "chkC8", "txtC8",           // C8 checkbox, then Container No.
-  "chkC9", "txtC9",           // C9 checkbox, then Container No.
-  "chkC10", "txtC10",         // C10 checkbox, then Container No.
-  "chkC6A", "txtC6A",         // C6A checkbox, then Container No.
+  "chkC1", "txtC1",           // First C1 = checkbox, Second C1 = container no.
+  "chkC2", "txtC2",           // First C2 = checkbox, Second C2 = container no.
+  "chkMF1",
+  "chkC3", "txtC3",
+  "chkMF2",
+  "chkC4", "txtC4",
+  "chkMF3",
+  "chkC5", "txtC5",
+  "chkMF4",
+  "chkC6", "txtC6",
+  "chkMF5",
+  "chkC7", "txtC7",
+  "chkMF6",
+  "chkC8", "txtC8",
+  "chkC9", "txtC9",
+  "chkC10", "txtC10",
   "chkScreen1", "chkScreen2", "chkScreen3",
   "txt1A", "txt1B", "txt2A", "txt2B",
   "chkDAF1", "chkDAF2", "cmbGTW",
@@ -1438,7 +1433,7 @@ const FIELD_NAMES = [
     const convertToExcelRow = (rawData) => {
   const uppercaseFields = [
     'bridgeWasteV', 'bridgeWasteT', 'tippingWasteV', 'tippingWasteT', 
-    'txtC1', 'txtC2', 'txtC3', 'txtC4', 'txtC5', 'txtC6', 'txtC7', 'txtC8', 'txtC9', 'txtC10', 'txtC6A'
+    'txtC1', 'txtC2', 'txtC3', 'txtC4', 'txtC5', 'txtC6', 'txtC7', 'txtC8', 'txtC9', 'txtC10'
   ];
   
   const processedData = { ...rawData };
@@ -1448,12 +1443,12 @@ const FIELD_NAMES = [
     }
   });
   
-  // Convert checkbox values to proper true/false strings
+  // Handle checkboxes (convert to true/false strings)
   const checkboxFields = [
     'chkWeightbridge1', 'chkWeightbridge2', 'chkWeightbridge3', 'chkWeightbridge4',
     'chktipping1', 'chktipping2', 'chkC1', 'chkC2', 'chkC3', 'chkC4', 'chkC5',
-    'chkC6', 'chkC7', 'chkC8', 'chkC9', 'chkC10', 'chkC6A', 'chkMF1', 'chkMF2',
-    'chkMF3', 'chkMF4', 'chkMF5', 'chkMF6', 'chkScreen1', 'chkScreen2', 'chkScreen3',
+    'chkC6', 'chkC7', 'chkC8', 'chkC9', 'chkC10', 'chkMF1', 'chkMF2', 'chkMF3',
+    'chkMF4', 'chkMF5', 'chkMF6', 'chkScreen1', 'chkScreen2', 'chkScreen3',
     'chkDAF1', 'chkDAF2', 'chkCrane1', 'chkCrane2', 'chkCHU1', 'chkCHU2',
     'chkLaiwan', 'chkNgonshuen', 'chkWash1', 'chkWash2', 'chkWash3',
     'chkScrubber1', 'chkScrubber2', 'chkScrubber3', 'chkScrubber4', 'chkScrubber5',
