@@ -1369,9 +1369,9 @@ const EXCEL_HEADERS = [
   "Status", "Centrifuge", "Wetsep", "Marine Vessel", "Storm  water", "VWF wastewater",
   "Rundown Screen", "FIQT -101", "FIQT -100", "FIT-313", "FIT-312", "T410", "FIT-413",
   "Public", "Road Wash", "Marine", "Scrubbers", "VWS",
-  "DO                T-401", "DO                T-402", "DO                T-403", "DO                T-404",
-  "Temp               T-401", "Temp               T-402", "Temp               T-403", "Temp               T-404",
-  "pH             T-404",
+  "DO T-401", "DO T-402", "DO T-403", "DO T-404",
+  "Temp T-401", "Temp T-402", "Temp T-403", "Temp T-404",
+  "pH T-404", 
   "Number of Containers Completed",
   "Wheelstopper Conditions", "Wheelstopper Conditions (Remarks)",
   "DG Storage",
@@ -1386,22 +1386,34 @@ const FIELD_NAMES = [
   "cmbPermitedW", "cmboffQ", "chktipping1", "chktipping2",
   "tippingWasteV", "tippingWasteT", "cmbtippingPermitedW", 
   "cmbtippingTraffic", "cmbtippingCCTV", "txtfPress",
+  
+  // C1: First header (C1) gets checkbox, Second header (C1) gets container number
   "chkC1", "txtC1",
+  // C2: First header (C2) gets checkbox, Second header (C2) gets container number
   "chkC2", "txtC2",
   "chkMF1",
+  // C3: First header (C3) gets checkbox, Second header (C3) gets container number
   "chkC3", "txtC3",
   "chkMF2",
+  // C4: First header (C4) gets checkbox, Second header (C4) gets container number
   "chkC4", "txtC4",
   "chkMF3",
+  // C5: First header (C5) gets checkbox, Second header (C5) gets container number
   "chkC5", "txtC5",
   "chkMF4",
+  // C6: First header (C6) gets checkbox, Second header (C6) gets container number
   "chkC6", "txtC6",
   "chkMF5",
+  // C7: First header (C7) gets checkbox, Second header (C7) gets container number
   "chkC7", "txtC7",
   "chkMF6",
+  // C8: First header (C8) gets checkbox, Second header (C8) gets container number
   "chkC8", "txtC8",
+  // C9: First header (C9) gets checkbox, Second header (C9) gets container number
   "chkC9", "txtC9",
+  // C10: First header (C10) gets checkbox, Second header (C10) gets container number
   "chkC10", "txtC10",
+  
   "chkScreen1", "chkScreen2", "chkScreen3",
   "txt1A", "txt1B", "txt2A", "txt2B",
   "chkDAF1", "chkDAF2", "cmbGTW",
@@ -1432,7 +1444,7 @@ const FIELD_NAMES = [
   "txtContainers",
   "chkWheelstoppers", "txtWheelstoppers",
   "cmbDG",
-  "chkC6A", "txtC6A",    // C6A moved to the end to match headers
+  "chkC6A", "txtC6A",   // C6A checkbox, then container number
   "timestamp"
 ];
 
