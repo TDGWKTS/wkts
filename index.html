@@ -1321,6 +1321,7 @@
     let syncDB;
 
     // ========== EXCEL HEADERS (C6A moved to the end) ==========
+// ========== EXCEL HEADERS (Status C1, C1, Status C2, C2, etc.) ==========
 const EXCEL_HEADERS = [
   "Date", "Inspected By", "Time", "Weather", 
   "WB No.1", "WB No.2", "WB No.3", "WB No.4",
@@ -1330,22 +1331,22 @@ const EXCEL_HEADERS = [
   "Vehicle No.", "Waste Type", "Permitted Waste", 
   "Traffic control signal", "CCTV system",
   "Filter Press", 
-  "C1", "C1", 
-  "C2", "C2", 
+  "Status C1", "C1", 
+  "Status C2", "C2", 
   "MF1", 
-  "C3", "C3", 
+  "Status C3", "C3", 
   "MF2", 
-  "C4", "C4", 
+  "Status C4", "C4", 
   "MF3", 
-  "C5", "C5", 
+  "Status C5", "C5", 
   "MF4", 
-  "C6", "C6", 
+  "Status C6", "C6", 
   "MF5", 
-  "C7", "C7", 
+  "Status C7", "C7", 
   "MF6", 
-  "C8", "C8", 
-  "C9", "C9", 
-  "C10", "C10",
+  "Status C8", "C8", 
+  "Status C9", "C9", 
+  "Status C10", "C10",
   "Screen 1", "Screen 2", "Screen 3",
   "1A", "1B", "2A", "2B",
   "DAF 1", "DAF 2", "Area Cleaned",
@@ -1369,16 +1370,16 @@ const EXCEL_HEADERS = [
   "Status", "Centrifuge", "Wetsep", "Marine Vessel", "Storm  water", "VWF wastewater",
   "Rundown Screen", "FIQT -101", "FIQT -100", "FIT-313", "FIT-312", "T410", "FIT-413",
   "Public", "Road Wash", "Marine", "Scrubbers", "VWS",
-  "DO T-401", "DO T-402", "DO T-403", "DO T-404",
-  "Temp T-401", "Temp T-402", "Temp T-403", "Temp T-404",
-  "pH T-404", 
+  "DO                T-401", "DO                T-402", "DO                T-403", "DO                T-404",
+  "Temp               T-401", "Temp               T-402", "Temp               T-403", "Temp               T-404",
+  "pH             T-404",
   "Number of Containers Completed",
   "Wheelstopper Conditions", "Wheelstopper Conditions (Remarks)",
   "DG Storage",
-  "C6A", "C6A"    // Moved C6A to the end
+  "Status C6A", "C6A"
 ];
 
-// ========== FIELD NAMES (C6A moved to match headers) ==========
+// ========== FIELD NAMES (Matching the new headers) ==========
 const FIELD_NAMES = [
   "txtDate", "cmbInspector", "txtTime", "cmbWeather", 
   "chkWeightbridge1", "chkWeightbridge2", "chkWeightbridge3", "chkWeightbridge4",
@@ -1387,31 +1388,31 @@ const FIELD_NAMES = [
   "tippingWasteV", "tippingWasteT", "cmbtippingPermitedW", 
   "cmbtippingTraffic", "cmbtippingCCTV", "txtfPress",
   
-  // C1: First header (C1) gets checkbox, Second header (C1) gets container number
+  // Status C1 (checkbox), C1 (container number)
   "chkC1", "txtC1",
-  // C2: First header (C2) gets checkbox, Second header (C2) gets container number
+  // Status C2 (checkbox), C2 (container number)
   "chkC2", "txtC2",
   "chkMF1",
-  // C3: First header (C3) gets checkbox, Second header (C3) gets container number
+  // Status C3 (checkbox), C3 (container number)
   "chkC3", "txtC3",
   "chkMF2",
-  // C4: First header (C4) gets checkbox, Second header (C4) gets container number
+  // Status C4 (checkbox), C4 (container number)
   "chkC4", "txtC4",
   "chkMF3",
-  // C5: First header (C5) gets checkbox, Second header (C5) gets container number
+  // Status C5 (checkbox), C5 (container number)
   "chkC5", "txtC5",
   "chkMF4",
-  // C6: First header (C6) gets checkbox, Second header (C6) gets container number
+  // Status C6 (checkbox), C6 (container number)
   "chkC6", "txtC6",
   "chkMF5",
-  // C7: First header (C7) gets checkbox, Second header (C7) gets container number
+  // Status C7 (checkbox), C7 (container number)
   "chkC7", "txtC7",
   "chkMF6",
-  // C8: First header (C8) gets checkbox, Second header (C8) gets container number
+  // Status C8 (checkbox), C8 (container number)
   "chkC8", "txtC8",
-  // C9: First header (C9) gets checkbox, Second header (C9) gets container number
+  // Status C9 (checkbox), C9 (container number)
   "chkC9", "txtC9",
-  // C10: First header (C10) gets checkbox, Second header (C10) gets container number
+  // Status C10 (checkbox), C10 (container number)
   "chkC10", "txtC10",
   
   "chkScreen1", "chkScreen2", "chkScreen3",
@@ -1444,7 +1445,7 @@ const FIELD_NAMES = [
   "txtContainers",
   "chkWheelstoppers", "txtWheelstoppers",
   "cmbDG",
-  "chkC6A", "txtC6A",   // C6A checkbox, then container number
+  "chkC6A", "txtC6A",   // Status C6A, C6A
   "timestamp"
 ];
 
