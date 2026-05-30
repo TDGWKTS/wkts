@@ -1960,7 +1960,16 @@ const collectRawFormData = () => {
         
         const now = new Date();
         const timestamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
-        XLSX.writeFile(wb, `inspections_${timestamp}.xlsx`);
+        const timeValue = document.getElementById('inspectTime').value;
+let timeForFilename = '';
+if (timeValue) {
+    timeForFilename = timeValue.replace(/[:]/g, '').replace(/\s/g, '');
+    if (timeForFilename.length > 4) {
+        timeForFilename = timeForFilename.substring(0, 4);
+    }
+}
+const filename = `WKTS_Inspection_${date}_${inspected}_${timeForFilename}.xlsx`;
+XLSX.writeFile(wb, filename);
         
         showStatusMessage(`✅ Excel exported with ${allExcelRows.length} records!`, 'success');
         
