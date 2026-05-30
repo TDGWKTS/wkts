@@ -1448,8 +1448,7 @@ const FIELD_NAMES = [
   "timestamp"
 ];
 
-    // ========== CONVERT RAW DATA TO EXCEL ROW (keeps true/false as strings) ==========
-    // ========== CONVERT RAW DATA TO EXCEL ROW (true/false -> TRUE/FALSE) ==========
+        // ========== CONVERT RAW DATA TO EXCEL ROW (true/false -> TRUE/FALSE) ==========
 const convertToExcelRow = (rawData) => {
   const processedData = { ...rawData };
   
@@ -1923,70 +1922,79 @@ const collectRawFormData = () => {
     });
 
     // ========== EXPORT TO EXCEL & SYNC TO CLOUD BUTTON ==========
-    document.getElementById('exportExcelBtn').addEventListener('click', async (e) => {
-      e.preventDefault();
-      
-      if (!confirm('Export ALL saved data to Excel AND sync to cloud? This will clear all local data after successful export.')) return;
-      
-      showLoading(currentPage, true);
-      showStatusMessage('📤 Starting export & sync process...', 'info');
-      
-      try {
-        showStatusMessage(`☁️ Syncing to Cloudflare R2...`, 'info');
-        const syncResult = await syncAllPending();
-        
-        if (syncResult.synced > 0) {
-          showStatusMessage(`✅ Synced ${syncResult.synced}/${syncResult.total} records to R2`, 'success');
-        }
-        
-        const allExcelRows = await getAllRecordsForExcel();
-        
-        if (!allExcelRows || allExcelRows.length === 0) {
-          showStatusMessage('No data to export to Excel', 'warning');
-          return;
-        }
-        
-        showStatusMessage(`📊 Generating Excel file with ${allExcelRows.length} record(s)...`, 'info');
-        
-        // Build worksheet data - headers and rows
-        const worksheetData = [
-          EXCEL_HEADERS,
-            ...allExcelRows.map(row => EXCEL_HEADERS.map(header => row[header] !== undefined ? row[header] : ''))
-        ];
-        
-        const ws = XLSX.utils.aoa_to_sheet(worksheetData);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Inspections");
-        
-        const now = new Date();
-        const timestamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
-        const timeValue = document.getElementById('inspectTime').value;
-let timeForFilename = '';
-if (timeValue) {
-    timeForFilename = timeValue.replace(/[:]/g, '').replace(/\s/g, '');
-    if (timeForFilename.length > 4) {
-        timeForFilename = timeForFilename.substring(0, 4);
+document.getElementById('exportExcelBtn').addEventListener('click', async (e) => {
+  e.preventDefault();
+  
+  if (!confirm('Export ALL saved data to Excel AND sync to cloud? This will clear all local data after successful export.')) return;
+  
+  showLoading(currentPage, true);
+  showStatusMessage('📤 Starting export & sync process...', 'info');
+  
+  try {
+    // Get date and inspector from current form (or first record)
+    const dateInput = document.getElementById('inspectDate');
+    const inspectedInput = document.getElementById('inspectedBy');
+    const timeInput = document.getElementById('inspectTime');
+    
+    const date = dateInput ? dateInput.value : '';
+    const inspected = inspectedInput ? inspectedInput.value.trim() : 'Unknown';
+    const timeValue = timeInput ? timeInput.value.trim() : '';
+    
+    showStatusMessage(`☁️ Syncing to Cloudflare R2...`, 'info');
+    const syncResult = await syncAllPending();
+    
+    if (syncResult.synced > 0) {
+      showStatusMessage(`✅ Synced ${syncResult.synced}/${syncResult.total} records to R2`, 'success');
     }
-}
-const filename = `WKTS_Inspection_${date}_${inspected}_${timeForFilename}.xlsx`;
-XLSX.writeFile(wb, filename);
-        
-        showStatusMessage(`✅ Excel exported with ${allExcelRows.length} records!`, 'success');
-        
-        await clearMainDB();
-        await clearSyncDB();
-        showStatusMessage(`🗑️ Local databases cleared`, 'success');
-        
-        showTemporaryMessage(`🎉 Export complete! ${allExcelRows.length} records exported to Excel and synced to R2.`);
-        
-      } catch (error) {
-        console.error('Export/Sync error:', error);
-        showStatusMessage(`❌ Failed: ${error.message}`, 'error');
-        showTemporaryMessage(`❌ Export failed: ${error.message}`, true);
-      } finally {
-        showLoading(currentPage, false);
+    
+    const allExcelRows = await getAllRecordsForExcel();
+    
+    if (!allExcelRows || allExcelRows.length === 0) {
+      showStatusMessage('No data to export to Excel', 'warning');
+      return;
+    }
+    
+    showStatusMessage(`📊 Generating Excel file with ${allExcelRows.length} record(s)...`, 'info');
+    
+    // Build worksheet data - headers and rows
+    const worksheetData = [
+      EXCEL_HEADERS,
+      ...allExcelRows.map(row => EXCEL_HEADERS.map(header => row[header] !== undefined ? row[header] : ''))
+    ];
+    
+    const ws = XLSX.utils.aoa_to_sheet(worksheetData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Inspections");
+    
+    // Format time for filename (remove colon, e.g., "14:30" -> "1430")
+    let timeForFilename = '';
+    if (timeValue) {
+      timeForFilename = timeValue.replace(/[:]/g, '').replace(/\s/g, '');
+      if (timeForFilename.length > 4) {
+        timeForFilename = timeForFilename.substring(0, 4);
       }
-    });
+    }
+    
+    // Create standardized filename
+    const filename = `WKTS_Inspection_${date}_${inspected}_${timeForFilename}.xlsx`;
+    XLSX.writeFile(wb, filename);
+    
+    showStatusMessage(`✅ Excel exported with ${allExcelRows.length} records!`, 'success');
+    
+    await clearMainDB();
+    await clearSyncDB();
+    showStatusMessage(`🗑️ Local databases cleared`, 'success');
+    
+    resetForm();
+    showStatusMessage(`🎉 Export & sync complete! Form is ready for next inspection.`, 'success');
+    
+  } catch (error) {
+    console.error('Export/Sync error:', error);
+    showStatusMessage(`❌ Failed: ${error.message}`, 'error');
+  } finally {
+    showLoading(currentPage, false);
+  }
+});
 
     // Event Listeners
     document.addEventListener('DOMContentLoaded', async () => {
